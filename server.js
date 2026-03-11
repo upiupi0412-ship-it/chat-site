@@ -12,7 +12,7 @@ const rooms = {}
 
 io.on("connection", (socket) => {
 
-    socket.on("joinRoom", ({roomName, userName}) => {
+    socket.on("joinRoom", ({ roomName, userName }) => {
 
         if (!rooms[roomName]) {
             rooms[roomName] = { users: [] }
@@ -20,13 +20,18 @@ io.on("connection", (socket) => {
 
         const room = rooms[roomName]
 
-        room.users.push(userName)
+        const user = {
+            id: socket.id,
+            name: userName
+        }
+
+        room.users.push(user)
 
         socket.join(roomName)
         socket.roomName = roomName
         socket.userName = userName
 
-        io.to(roomName).emit("userList", room.users)
+        io.to(roomName).emit("userList", room.users.map(u => u.name))
 
         io.to(roomName).emit("popup", {
             type: "join",
@@ -59,9 +64,9 @@ io.on("connection", (socket) => {
         const room = rooms[roomName]
         if (!room) return
 
-        room.users = room.users.filter(u => u !== socket.userName)
+        room.users = room.users.filter(u => u.id !== socket.id)
 
-        io.to(roomName).emit("userList", room.users)
+        io.to(roomName).emit("userList", room.users.map(u => u.name))
 
         io.to(roomName).emit("popup", {
             type: "leave",

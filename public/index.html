@@ -102,20 +102,28 @@
             flex-direction: column;
         }
 
+        .msgWrapper {
+            display: flex;
+            flex-direction: column;
+            max-width: 60%;
+            margin-bottom: 10px;
+        }
+
         .msgHeader {
             font-size: 12px;
             color: #888;
-            margin: 2px 8px;
+            margin: 0 8px;
         }
 
         .message {
             padding: 10px 14px;
-            margin: 2px 8px 10px 8px;
-            max-width: 60%;
+            margin-top: 2px;
             border-radius: 15px;
             font-size: 16px;
             word-break: break-word;
         }
+
+        /* 自分 */
 
         .mine {
             align-self: flex-end;
@@ -125,6 +133,8 @@
             .mine .message {
                 background: #9fe8a9;
             }
+
+        /* 相手 */
 
         .other {
             align-self: flex-start;
@@ -229,14 +239,14 @@
 
         function joinRoom(){
 
-        const name = document.getElementById("name").value
-        const room = document.getElementById("room").value
+        const name=document.getElementById("name").value
+        const room=document.getElementById("room").value
 
-        if(!name || !room) return
+        if(!name||!room)return
 
         socket.emit("joinRoom",{roomName:room,userName:name})
 
-        document.getElementById("roomTitle").textContent = room
+        document.getElementById("roomTitle").textContent=room
         document.getElementById("chat").classList.add("open")
 
         }
@@ -245,10 +255,10 @@
 
         function sendMessage(){
 
-        const input = document.getElementById("messageInput")
-        const text = input.value
+        const input=document.getElementById("messageInput")
+        const text=input.value
 
-        if(text==="") return
+        if(text==="")return
 
         socket.emit("chatMessage",text)
 
@@ -268,7 +278,7 @@
 
         socket.on("userList",(users)=>{
 
-        const usersDiv = document.getElementById("users")
+        const usersDiv=document.getElementById("users")
         usersDiv.innerHTML=""
 
         users.forEach(user=>{
@@ -283,33 +293,33 @@
 
         })
 
-        /* メッセージ受信 */
+        /* メッセージ */
 
         socket.on("chatMessage",(data)=>{
 
         const messages=document.getElementById("messages")
 
-        const container=document.createElement("div")
+        const wrapper=document.createElement("div")
+        wrapper.classList.add("msgWrapper")
+
+        if(data.user===document.getElementById("name").value){
+        wrapper.classList.add("mine")
+        }else{
+        wrapper.classList.add("other")
+        }
 
         const header=document.createElement("div")
         header.classList.add("msgHeader")
+        header.textContent=data.user+" "+data.time
 
         const message=document.createElement("div")
         message.classList.add("message")
-
-        header.textContent=data.user+" "+data.time
         message.textContent=data.text
 
-        if(data.user===document.getElementById("name").value){
-        container.classList.add("mine")
-        }else{
-        container.classList.add("other")
-        }
+        wrapper.appendChild(header)
+        wrapper.appendChild(message)
 
-        container.appendChild(header)
-        container.appendChild(message)
-
-        messages.appendChild(container)
+        messages.appendChild(wrapper)
 
         messages.scrollTop=messages.scrollHeight
 
