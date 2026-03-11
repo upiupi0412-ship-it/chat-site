@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="robots" content="noindex">
     <title>Chat</title>
 
     <style>
@@ -11,8 +11,6 @@
             margin: 0;
             font-family: sans-serif;
         }
-
-        /* 初期画面 */
 
         #home {
             position: absolute;
@@ -24,8 +22,6 @@
             justify-content: center;
         }
 
-        /* チャット画面 */
-
         #chat {
             position: absolute;
             width: 100%;
@@ -36,17 +32,43 @@
             padding: 20px;
         }
 
-            /* 開いた状態 */
-
             #chat.open {
                 transform: translateX(0);
             }
+
+        #messages {
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            padding: 8px;
+            margin: 5px;
+            max-width: 60%;
+            border-radius: 10px;
+        }
+
+        .mine {
+            background: #9fe8a9;
+            margin-left: auto;
+            text-align: right;
+        }
+
+        .other {
+            background: #eee;
+            margin-right: auto;
+            text-align: left;
+        }
+
+        #inputArea {
+            display: flex;
+            gap: 5px;
+        }
     </style>
 </head>
 
 <body>
-
-    <!-- 入室画面 -->
 
     <div id="home">
 
@@ -62,14 +84,18 @@
 
     </div>
 
-    <!-- チャット画面 -->
-
     <div id="chat">
 
         <h2 id="roomTitle"></h2>
 
-        <h3>参加者</h3>
+        <div id="messages"></div>
 
+        <div id="inputArea">
+            <input id="messageInput" placeholder="メッセージ">
+            <button onclick="sendMessage()">送信</button>
+        </div>
+
+        <h3>参加者</h3>
         <ul id="users"></ul>
 
     </div>
@@ -86,20 +112,32 @@
         const room = document.getElementById("room").value
 
         socket.emit("joinRoom",{
-        roomName: room,
-        userName: name
+        roomName:room,
+        userName:name
         })
 
         document.getElementById("roomTitle").textContent = room
 
-        /* 右からスライド */
-
         document.getElementById("chat").classList.add("open")
+
+        }
+
+        function sendMessage(){
+
+        const input = document.getElementById("messageInput")
+        const text = input.value
+
+        if(text==="") return
+
+        socket.emit("chatMessage",text)
+
+        input.value=""
+
         }
 
         socket.on("userList",(users)=>{
 
-        const ul = document.getElementById("users")
+        const ul=document.getElementById("users")
         ul.innerHTML=""
 
         users.forEach(user=>{
@@ -110,6 +148,28 @@
         ul.appendChild(li)
 
         })
+
+        })
+
+        socket.on("chatMessage",(data)=>{
+
+        const messages=document.getElementById("messages")
+
+        const div=document.createElement("div")
+
+        div.classList.add("message")
+
+        if(data.user===document.getElementById("name").value){
+        div.classList.add("mine")
+        }else{
+        div.classList.add("other")
+        }
+
+        div.textContent=data.user+" : "+data.text
+
+        messages.appendChild(div)
+
+        messages.scrollTop=messages.scrollHeight
 
         })
 

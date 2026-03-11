@@ -29,6 +29,18 @@ io.on("connection", (socket) => {
         io.to(roomName).emit("userList", room.users)
     })
 
+    socket.on("chatMessage", (msg) => {
+
+        const roomName = socket.roomName
+        if (!roomName) return
+
+        io.to(roomName).emit("chatMessage", {
+            user: socket.userName,
+            text: msg
+        })
+
+    })
+
     socket.on("disconnect", () => {
 
         const roomName = socket.roomName
@@ -44,4 +56,8 @@ io.on("connection", (socket) => {
 
 })
 
-server.listen(3000)
+const PORT = process.env.PORT || 3000
+
+server.listen(PORT, () => {
+    console.log("server started")
+})
