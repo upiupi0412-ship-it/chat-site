@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Chat</title>
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        /* 初期画面 */
+
+        #home {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* チャット画面 */
+
+        #chat {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            transform: translateX(100%);
+            transition: 0.4s;
+            padding: 20px;
+        }
+
+            /* 開いた状態 */
+
+            #chat.open {
+                transform: translateX(0);
+            }
+    </style>
+</head>
+
+<body>
+
+    <!-- 入室画面 -->
+
+    <div id="home">
+
+        <h2>チャットに入る</h2>
+
+        <input id="name" placeholder="名前">
+        <br><br>
+
+        <input id="room" placeholder="部屋名">
+        <br><br>
+
+        <button onclick="joinRoom()">入る</button>
+
+    </div>
+
+    <!-- チャット画面 -->
+
+    <div id="chat">
+
+        <h2 id="roomTitle"></h2>
+
+        <h3>参加者</h3>
+
+        <ul id="users"></ul>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+
+        const socket = io()
+
+        function joinRoom(){
+
+        const name = document.getElementById("name").value
+        const room = document.getElementById("room").value
+
+        socket.emit("joinRoom",{
+        roomName: room,
+        userName: name
+        })
+
+        document.getElementById("roomTitle").textContent = room
+
+        /* 右からスライド */
+
+        document.getElementById("chat").classList.add("open")
+        }
+
+        socket.on("userList",(users)=>{
+
+        const ul = document.getElementById("users")
+        ul.innerHTML=""
+
+        users.forEach(user=>{
+
+        const li=document.createElement("li")
+        li.textContent=user
+
+        ul.appendChild(li)
+
+        })
+
+        })
+
+    </script>
+
+</body>
+</html>
