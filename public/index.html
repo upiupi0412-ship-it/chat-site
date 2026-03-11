@@ -177,6 +177,30 @@
                 font-size: 16px;
                 cursor: pointer;
             }
+
+        .msgHeader {
+            font-size: 12px;
+            color: #888;
+            margin: 0 8px;
+        }
+
+        .mine {
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .other {
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .mine .message {
+            background: #9fe8a9;
+        }
+
+        .other .message {
+            background: #eee;
+        }
     </style>
 
 </head>
@@ -289,23 +313,32 @@
 
         const messages=document.getElementById("messages")
 
-        const div=document.createElement("div")
-        div.classList.add("message")
+        const container=document.createElement("div")
+
+        const header=document.createElement("div")
+        header.classList.add("msgHeader")
+
+        const message=document.createElement("div")
+        message.classList.add("message")
+
+        header.textContent=data.user+" "+data.time
+
+        message.textContent=data.text
 
         if(data.user===document.getElementById("name").value){
-        div.classList.add("mine")
+        container.classList.add("mine")
         }else{
-        div.classList.add("other")
+        container.classList.add("other")
         }
 
-        div.textContent=data.user+" : "+data.text
+        container.appendChild(header)
+        container.appendChild(message)
 
-        messages.appendChild(div)
+        messages.appendChild(container)
 
         messages.scrollTop=messages.scrollHeight
 
         })
-
         /* ポップアップ */
 
         socket.on("popup",(data)=>{

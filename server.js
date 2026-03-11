@@ -28,8 +28,6 @@ io.on("connection", (socket) => {
 
         io.to(roomName).emit("userList", room.users)
 
-        /* 入室ポップアップ */
-
         io.to(roomName).emit("popup", {
             type: "join",
             user: userName
@@ -41,9 +39,15 @@ io.on("connection", (socket) => {
         const roomName = socket.roomName
         if (!roomName) return
 
+        const time = new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        })
+
         io.to(roomName).emit("chatMessage", {
             user: socket.userName,
-            text: msg
+            text: msg,
+            time: time
         })
     })
 
@@ -58,8 +62,6 @@ io.on("connection", (socket) => {
         room.users = room.users.filter(u => u !== socket.userName)
 
         io.to(roomName).emit("userList", room.users)
-
-        /* 退出ポップアップ */
 
         io.to(roomName).emit("popup", {
             type: "leave",
