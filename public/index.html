@@ -10,7 +10,10 @@
         body {
             margin: 0;
             font-family: sans-serif;
+            background: #f5f5f5;
         }
+
+        /* 入室画面 */
 
         #home {
             position: absolute;
@@ -20,7 +23,29 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            gap: 20px;
         }
+
+            #home input {
+                width: 320px;
+                padding: 15px;
+                font-size: 18px;
+                border-radius: 8px;
+                border: 1px solid #ccc;
+            }
+
+            #home button {
+                width: 320px;
+                padding: 16px;
+                font-size: 20px;
+                border: none;
+                border-radius: 8px;
+                background: #4CAF50;
+                color: white;
+                cursor: pointer;
+            }
+
+        /* チャット画面 */
 
         #chat {
             position: absolute;
@@ -29,74 +54,129 @@
             background: white;
             transform: translateX(100%);
             transition: 0.4s;
-            padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
             #chat.open {
                 transform: translateX(0);
             }
 
-        #messages {
-            height: 300px;
-            overflow-y: auto;
-            margin-bottom: 10px;
+        /* 上部バー */
+
+        #topbar {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
         }
 
+        #roomTitle {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        /* 参加者 */
+
+        #users {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .user {
+            background: #eee;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* メッセージエリア */
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* メッセージ */
+
         .message {
-            padding: 8px;
+            padding: 10px 14px;
             margin: 5px;
             max-width: 60%;
-            border-radius: 10px;
+            border-radius: 15px;
+            font-size: 16px;
         }
 
         .mine {
             background: #9fe8a9;
             margin-left: auto;
-            text-align: right;
         }
 
         .other {
             background: #eee;
             margin-right: auto;
-            text-align: left;
         }
+
+        /* 入力エリア */
 
         #inputArea {
             display: flex;
-            gap: 5px;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 14px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        #sendButton {
+            padding: 14px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- 入室画面 -->
+
     <div id="home">
 
-        <h2>チャットに入る</h2>
-
         <input id="name" placeholder="名前">
-        <br><br>
-
         <input id="room" placeholder="部屋名">
-        <br><br>
 
         <button onclick="joinRoom()">入る</button>
 
     </div>
 
+    <!-- チャット画面 -->
+
     <div id="chat">
 
-        <h2 id="roomTitle"></h2>
+        <div id="topbar">
+            <h2 id="roomTitle"></h2>
+            <div id="users"></div>
+        </div>
 
         <div id="messages"></div>
 
         <div id="inputArea">
             <input id="messageInput" placeholder="メッセージ">
-            <button onclick="sendMessage()">送信</button>
+            <button id="sendButton" onclick="sendMessage()">送信</button>
         </div>
-
-        <h3>参加者</h3>
-        <ul id="users"></ul>
 
     </div>
 
@@ -108,24 +188,28 @@
 
         function joinRoom(){
 
-        const name = document.getElementById("name").value
-        const room = document.getElementById("room").value
+        const name=document.getElementById("name").value
+        const room=document.getElementById("room").value
+
+        if(!name || !room) return
 
         socket.emit("joinRoom",{
         roomName:room,
         userName:name
         })
 
-        document.getElementById("roomTitle").textContent = room
+        document.getElementById("roomTitle").textContent=room
 
         document.getElementById("chat").classList.add("open")
 
         }
 
+        /* メッセージ送信 */
+
         function sendMessage(){
 
-        const input = document.getElementById("messageInput")
-        const text = input.value
+        const input=document.getElementById("messageInput")
+        const text=input.value
 
         if(text==="") return
 
@@ -135,21 +219,27 @@
 
         }
 
+        /* 参加者更新 */
+
         socket.on("userList",(users)=>{
 
-        const ul=document.getElementById("users")
-        ul.innerHTML=""
+        const usersDiv=document.getElementById("users")
+
+        usersDiv.innerHTML=""
 
         users.forEach(user=>{
 
-        const li=document.createElement("li")
-        li.textContent=user
+        const div=document.createElement("div")
+        div.classList.add("user")
+        div.textContent=user
 
-        ul.appendChild(li)
+        usersDiv.appendChild(div)
 
         })
 
         })
+
+        /* メッセージ受信 */
 
         socket.on("chatMessage",(data)=>{
 
