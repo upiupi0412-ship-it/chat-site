@@ -103,27 +103,27 @@
         }
 
         .msgWrapper {
-            display: flex;
-            flex-direction: column;
+            position: relative;
             max-width: 60%;
-            margin-bottom: 10px;
-            width: fit-content;
+            margin-bottom: 22px;
+            display: inline-block;
         }
 
         .msgHeader {
+            position: absolute;
+            top: -16px;
+            left: 8px;
             font-size: 12px;
             color: #888;
-            margin: 0 8px;
-            display: inline-block;
-            max-width: 100%;
+            white-space: nowrap;
         }
 
         .message {
             padding: 10px 14px;
-            margin-top: 2px;
             border-radius: 15px;
             font-size: 16px;
             word-break: break-word;
+            display: inline-block;
         }
 
         /* 自分 */
@@ -305,12 +305,6 @@
         const wrapper=document.createElement("div")
         wrapper.classList.add("msgWrapper")
 
-        if(data.user===document.getElementById("name").value){
-        wrapper.classList.add("mine")
-        }else{
-        wrapper.classList.add("other")
-        }
-
         const header=document.createElement("div")
         header.classList.add("msgHeader")
         header.textContent=data.user+" "+data.time
@@ -319,8 +313,14 @@
         message.classList.add("message")
         message.textContent=data.text
 
-        wrapper.appendChild(header)
         wrapper.appendChild(message)
+        wrapper.appendChild(header)
+
+        if(data.user===document.getElementById("name").value){
+        wrapper.classList.add("mine")
+        }else{
+        wrapper.classList.add("other")
+        }
 
         messages.appendChild(wrapper)
 
