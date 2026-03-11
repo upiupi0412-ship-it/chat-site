@@ -5,7 +5,6 @@
 
     <meta charset="UTF-8">
     <meta name="robots" content="noindex">
-
     <title>Chat</title>
 
     <style>
@@ -16,7 +15,7 @@
             background: #f5f5f5;
         }
 
-        /* 入室画面 */
+        /* 入室 */
 
         #home {
             position: absolute;
@@ -48,7 +47,7 @@
                 cursor: pointer;
             }
 
-        /* チャット画面 */
+        /* チャット */
 
         #chat {
             position: absolute;
@@ -65,7 +64,7 @@
                 transform: translateX(0);
             }
 
-        /* 上部バー */
+        /* 上バー */
 
         #topbar {
             padding: 15px;
@@ -93,7 +92,7 @@
             font-size: 14px;
         }
 
-        /* メッセージエリア */
+        /* メッセージ */
 
         #messages {
             flex: 1;
@@ -103,15 +102,11 @@
             flex-direction: column;
         }
 
-        /* 名前＋時間 */
-
         .msgHeader {
             font-size: 12px;
             color: #888;
             margin: 2px 8px;
         }
-
-        /* メッセージ */
 
         .message {
             padding: 10px 14px;
@@ -122,8 +117,6 @@
             word-break: break-word;
         }
 
-        /* 自分 */
-
         .mine {
             align-self: flex-end;
             text-align: right;
@@ -132,8 +125,6 @@
             .mine .message {
                 background: #9fe8a9;
             }
-
-        /* 相手 */
 
         .other {
             align-self: flex-start;
@@ -207,12 +198,9 @@
 <body>
 
     <div id="home">
-
         <input id="name" placeholder="名前">
         <input id="room" placeholder="部屋名">
-
         <button onclick="joinRoom()">入る</button>
-
     </div>
 
     <div id="chat">
@@ -246,13 +234,9 @@
 
         if(!name || !room) return
 
-        socket.emit("joinRoom",{
-        roomName: room,
-        userName: name
-        })
+        socket.emit("joinRoom",{roomName:room,userName:name})
 
         document.getElementById("roomTitle").textContent = room
-
         document.getElementById("chat").classList.add("open")
 
         }
@@ -264,380 +248,7 @@
         const input = document.getElementById("messageInput")
         const text = input.value
 
-        if(text === "") return
-
-        socket.emit("chatMessage", text)
-
-        input.value = ""
-
-        }
-
-        /* Enter送信 */
-
-        document.getElementById("messageInput").addEventListener("keydown", function(e){
-        if(e.key === "Enter"){
-        sendMessage()
-        }
-        })
-
-        /* 参加者 */
-
-        socket.on("userList", function(users){
-
-        const usersDiv = document.getElementById("users")
-
-        usersDiv.innerHTML = ""
-
-        users.forEach(function(user){
-
-        const div = document.createElement("div")
-        div.classList.add("user")
-        div.textContent = user
-
-        usersDiv.appendChild(div)
-
-        })
-
-        })
-
-        /* メッセージ受信 */
-
-        socket.on("chatMessage", function(data){
-
-        const messages = document.getElementById("messages")
-
-        const container = document.createElement("div")
-
-        const header = document.createElement("div")
-        header.classList.add("msgHeader")
-
-        const message = document.createElement("div")
-        message.classList.add("message")
-
-        header.textContent = data.user + " " + data.time
-        message.textContent = data.text
-
-        if(data.user === document.getElementById("name").value){
-        container.classList.add("mine")
-        }else{
-        container.classList.add("other")
-        }
-
-        container.appendChild(header)
-        container.appendChild(message)
-
-        messages.appendChild(container)
-
-        messages.scrollTop = messages.scrollHeight
-
-        })
-
-        /* ポップアップ */
-
-        socket.on("popup", function(data){
-
-        const popupArea = document.getElementById("popupArea")
-
-        const div = document.createElement("div")
-        div.classList.add("popup")
-
-        let text = ""
-
-        if(data.type === "join"){
-        text = data.user + " が入室しました"
-        }else{
-        text = data.user + " が退出しました"
-        }
-
-        const span = document.createElement("span")
-        span.textContent = text
-
-        const close = document.createElement("button")
-        close.textContent = "✕"
-
-        close.onclick = function(){
-        div.remove()
-        }
-
-        div.appendChild(span)
-        div.appendChild(close)
-
-        popupArea.appendChild(div)
-
-        setTimeout(function(){
-        div.remove()
-        },10000)
-
-        })
-
-    </script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-
-<head>
-
-    <meta charset="UTF-8">
-    <meta name="robots" content="noindex">
-
-    <title>Chat</title>
-
-    <style>
-
-        body {
-            margin: 0;
-            font-family: sans-serif;
-            background: #f5f5f5;
-        }
-
-        /* 入室画面 */
-
-        #home {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-        }
-
-            #home input {
-                width: 320px;
-                padding: 15px;
-                font-size: 18px;
-                border-radius: 8px;
-                border: 1px solid #ccc;
-            }
-
-            #home button {
-                width: 320px;
-                padding: 16px;
-                font-size: 20px;
-                border: none;
-                border-radius: 8px;
-                background: #4CAF50;
-                color: white;
-                cursor: pointer;
-            }
-
-        /* チャット画面 */
-
-        #chat {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: white;
-            transform: translateX(100%);
-            transition: 0.4s;
-            display: flex;
-            flex-direction: column;
-        }
-
-            #chat.open {
-                transform: translateX(0);
-            }
-
-        /* 上部バー */
-
-        #topbar {
-            padding: 15px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        #roomTitle {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        /* 参加者 */
-
-        #users {
-            display: flex;
-            gap: 10px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-
-        .user {
-            background: #eee;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-
-        /* メッセージエリア */
-
-        #messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 名前＋時間 */
-
-        .msgHeader {
-            font-size: 12px;
-            color: #888;
-            margin: 2px 8px;
-        }
-
-        /* メッセージ */
-
-        .message {
-            padding: 10px 14px;
-            margin: 2px 8px 10px 8px;
-            max-width: 60%;
-            border-radius: 15px;
-            font-size: 16px;
-            word-break: break-word;
-        }
-
-        /* 自分 */
-
-        .mine {
-            align-self: flex-end;
-            text-align: right;
-        }
-
-            .mine .message {
-                background: #9fe8a9;
-            }
-
-        /* 相手 */
-
-        .other {
-            align-self: flex-start;
-            text-align: left;
-        }
-
-            .other .message {
-                background: #eee;
-            }
-
-        /* 入力 */
-
-        #inputArea {
-            display: flex;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-            gap: 10px;
-        }
-
-        #messageInput {
-            flex: 1;
-            padding: 14px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-        }
-
-        #sendButton {
-            padding: 14px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            background: #4CAF50;
-            color: white;
-            cursor: pointer;
-        }
-
-        /* ポップアップ */
-
-        #popupArea {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-
-        .popup {
-            background: #333;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-            .popup button {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 16px;
-                cursor: pointer;
-            }
-    </style>
-
-</head>
-
-<body>
-
-    <div id="home">
-
-        <input id="name" placeholder="名前">
-        <input id="room" placeholder="部屋名">
-
-        <button onclick="joinRoom()">入る</button>
-
-    </div>
-
-    <div id="chat">
-
-        <div id="topbar">
-            <h2 id="roomTitle"></h2>
-            <div id="users"></div>
-        </div>
-
-        <div id="messages"></div>
-
-        <div id="inputArea">
-            <input id="messageInput" placeholder="メッセージ">
-            <button id="sendButton" onclick="sendMessage()">送信</button>
-        </div>
-
-    </div>
-
-    <div id="popupArea"></div>
-
-    <script src="/socket.io/socket.io.js"></script>
-
-    <script>
-
-        const socket=io()
-
-        function joinRoom(){
-
-        const name=document.getElementById("name").value
-        const room=document.getElementById("room").value
-
-        if(!name||!room)return
-
-        socket.emit("joinRoom",{roomName:room,userName:name})
-
-        document.getElementById("roomTitle").textContent=room
-
-        document.getElementById("chat").classList.add("open")
-
-        }
-
-        /* 送信 */
-
-        function sendMessage(){
-
-        const input=document.getElementById("messageInput")
-        const text=input.value
-
-        if(text==="")return
+        if(text==="") return
 
         socket.emit("chatMessage",text)
 
@@ -657,7 +268,7 @@
 
         socket.on("userList",(users)=>{
 
-        const usersDiv=document.getElementById("users")
+        const usersDiv = document.getElementById("users")
         usersDiv.innerHTML=""
 
         users.forEach(user=>{
@@ -725,7 +336,7 @@
         span.textContent=text
 
         const close=document.createElement("button")
-        close.textContent="✕
+        close.textContent="✕"
 
         close.onclick=()=>{
         div.remove()
