@@ -27,6 +27,13 @@ io.on("connection", (socket) => {
         socket.userName = userName
 
         io.to(roomName).emit("userList", room.users)
+
+        /* 入室ポップアップ */
+
+        io.to(roomName).emit("popup", {
+            type: "join",
+            user: userName
+        })
     })
 
     socket.on("chatMessage", (msg) => {
@@ -38,7 +45,6 @@ io.on("connection", (socket) => {
             user: socket.userName,
             text: msg
         })
-
     })
 
     socket.on("disconnect", () => {
@@ -52,6 +58,13 @@ io.on("connection", (socket) => {
         room.users = room.users.filter(u => u !== socket.userName)
 
         io.to(roomName).emit("userList", room.users)
+
+        /* 退出ポップアップ */
+
+        io.to(roomName).emit("popup", {
+            type: "leave",
+            user: socket.userName
+        })
     })
 
 })

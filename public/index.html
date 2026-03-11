@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="robots" content="noindex">
+
     <title>Chat</title>
 
     <style>
@@ -90,7 +93,7 @@
             font-size: 14px;
         }
 
-        /* メッセージエリア */
+        /* メッセージ */
 
         #messages {
             flex: 1;
@@ -99,8 +102,6 @@
             display: flex;
             flex-direction: column;
         }
-
-        /* メッセージ */
 
         .message {
             padding: 10px 14px;
@@ -120,7 +121,7 @@
             margin-right: auto;
         }
 
-        /* 入力エリア */
+        /* 入力 */
 
         #inputArea {
             display: flex;
@@ -146,7 +147,38 @@
             color: white;
             cursor: pointer;
         }
+
+        /* ポップアップ */
+
+        #popupArea {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .popup {
+            background: #333;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .popup button {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+            }
     </style>
+
 </head>
 
 <body>
@@ -179,6 +211,8 @@
         </div>
 
     </div>
+
+    <div id="popupArea"></div>
 
     <script src="/socket.io/socket.io.js"></script>
 
@@ -219,7 +253,17 @@
 
         }
 
-        /* 参加者更新 */
+        /* Enter送信 */
+
+        document.getElementById("messageInput").addEventListener("keydown",(e)=>{
+
+        if(e.key==="Enter"){
+        sendMessage()
+        }
+
+        })
+
+        /* 参加者 */
 
         socket.on("userList",(users)=>{
 
@@ -246,7 +290,6 @@
         const messages=document.getElementById("messages")
 
         const div=document.createElement("div")
-
         div.classList.add("message")
 
         if(data.user===document.getElementById("name").value){
@@ -263,9 +306,45 @@
 
         })
 
-    </script>
+        /* ポップアップ */
 
-    <div id="popupArea"></div>
+        socket.on("popup",(data)=>{
+
+        const popupArea=document.getElementById("popupArea")
+
+        const div=document.createElement("div")
+        div.classList.add("popup")
+
+        let text=""
+
+        if(data.type==="join"){
+        text=data.user+" が入室しました"
+        }else{
+        text=data.user+" が退出しました"
+        }
+
+        const span=document.createElement("span")
+        span.textContent=text
+
+        const close=document.createElement("button")
+        close.textContent="✕"
+
+        close.onclick=()=>{
+        div.remove()
+        }
+
+        div.appendChild(span)
+        div.appendChild(close)
+
+        popupArea.appendChild(div)
+
+        setTimeout(()=>{
+        div.remove()
+        },10000)
+
+        })
+
+    </script>
 
 </body>
 </html>
