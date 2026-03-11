@@ -93,33 +93,43 @@
             font-size: 14px;
         }
 
-        /* メッセージ */
-
-        #messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
+        .msgHeader {
+            font-size: 12px;
+            color: #888;
+            margin: 2px 8px;
         }
+
+        /* メッセージ箱 */
 
         .message {
             padding: 10px 14px;
-            margin: 5px;
+            margin: 2px 8px 10px 8px;
             max-width: 60%;
             border-radius: 15px;
             font-size: 16px;
         }
 
+        /* 自分 */
+
         .mine {
-            background: #9fe8a9;
-            margin-left: auto;
+            align-self: flex-end;
+            text-align: right;
         }
 
+            .mine .message {
+                background: #9fe8a9;
+            }
+
+        /* 相手 */
+
         .other {
-            background: #eee;
-            margin-right: auto;
+            align-self: flex-start;
+            text-align: left;
         }
+
+            .other .message {
+                background: #eee;
+            }
 
         /* 入力 */
 
