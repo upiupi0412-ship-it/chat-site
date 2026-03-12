@@ -3,44 +3,258 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
     <title>Chat</title>
 
     <style>
 
-        html, body {
+        body {
             margin: 0;
-            height: 100%;
             font-family: sans-serif;
-            overflow-x: hidden;
             background: #f5f5f5;
+            overflow-x: hidden;
+        }
+
+        /* 入室 */
+
+        #home {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+            #home input {
+                width: 320px;
+                padding: 15px;
+                font-size: 18px;
+                border-radius: 8px;
+                border: 1px solid #ccc;
+            }
+
+            #home button {
+                width: 320px;
+                padding: 16px;
+                font-size: 20px;
+                border: none;
+                border-radius: 8px;
+                background: #4CAF50;
+                color: white;
+                cursor: pointer;
+            }
+
+        /* チャット */
+
+        #chat {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            transform: translateX(100%);
+            transition: 0.4s;
+            display: flex;
+            flex-direction: column;
+        }
+
+            #chat.open {
+                transform: translateX(0);
+            }
+
+        /* 上バー */
+
+        #topbar {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #roomTitle {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        /* 参加者 */
+
+        #users {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .user {
+            background: #eee;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
         }
 
         /* メッセージ */
 
-        .msgWrapper {
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
             position: relative;
-            max-width: 60%;
-            margin-bottom: 22px;
-            display: inline-block;
         }
 
-        .message {
-            padding: 10px 14px;
-            border-radius: 15px;
-            font-size: 16px;
-            cursor: pointer;
+        .msgContainer {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            max-width: 60%;
+            margin-bottom: 18px;
         }
 
         .mine {
             align-self: flex-end;
         }
 
-            .mine .message {
-                background: #9fe8a9;
-            }
+        .other {
+            align-self: flex-start;
+        }
+
+        .message {
+            padding: 10px 14px;
+            border-radius: 15px;
+            font-size: 16px;
+            word-break: break-word;
+        }
+
+        .mine .message {
+            background: #9fe8a9;
+        }
 
         .other .message {
             background: #eee;
+        }
+
+        .msgHeader {
+            font-size: 12px;
+            color: #888;
+            position: absolute;
+            top: -14px;
+        }
+
+        .mine .msgHeader {
+            right: 10px;
+            text-align: right;
+        }
+
+        .other .msgHeader {
+            left: 10px;
+        }
+
+        /* 入力 */
+
+        #inputArea {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 14px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        #sendButton {
+            padding: 14px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* 退出バー */
+
+        #leaveBar {
+            padding: 8px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+        }
+
+        #leaveButton {
+            background: #e53935;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* ポップアップ */
+
+        #popupArea {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .popup {
+            background: #333;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .popup button {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+            }
+
+        /* typing */
+
+        .typing {
+            font-style: italic;
+            color: #777;
+        }
+
+        /* ドットアニメーション */
+
+        @keyframes dots {
+
+            0% {
+                content: ".";
+            }
+
+            33% {
+                content: "..";
+            }
+
+            66% {
+                content: "...";
+            }
+
+            100% {
+                content: ".";
+            }
+        }
+
+        .dots::after {
+            content: ".";
+            animation: dots 1.2s infinite;
         }
 
         /* メニュー */
@@ -51,11 +265,11 @@
             border: 1px solid #ccc;
             border-radius: 6px;
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            z-index: 1000;
+            z-index: 999;
         }
 
             .msgMenu div {
-                padding: 8px 12px;
+                padding: 8px 14px;
                 cursor: pointer;
             }
 
@@ -69,12 +283,37 @@
             background: #ddd !important;
         }
     </style>
-
 </head>
 
 <body>
 
-    <div id="messages"></div>
+    <div id="home">
+        <input id="name" placeholder="名前">
+        <input id="room" placeholder="部屋名">
+        <button onclick="joinRoom()">入る</button>
+    </div>
+
+    <div id="chat">
+
+        <div id="topbar">
+            <h2 id="roomTitle"></h2>
+            <div id="users"></div>
+        </div>
+
+        <div id="messages"></div>
+
+        <div id="inputArea">
+            <input id="messageInput" placeholder="メッセージ">
+            <button id="sendButton" onclick="sendMessage()">送信</button>
+        </div>
+
+        <div id="leaveBar">
+            <button id="leaveButton" onclick="leaveRoom()">退出</button>
+        </div>
+
+    </div>
+
+    <div id="popupArea"></div>
 
     <script src="/socket.io/socket.io.js"></script>
 
@@ -82,15 +321,222 @@
 
         const socket=io()
 
-        const name=prompt("名前")
-
-        socket.emit("joinRoom",{roomName:"main",userName:name})
-
+        let typingUsers={}
+        let typingTimeout
         let currentMenu=null
 
-        function showMenu(x,y,msg,id,isMine){
+        function joinRoom(){
 
-        if(currentMenu)currentMenu.remove()
+        const name=document.getElementById("name").value
+        const room=document.getElementById("room").value
+
+        if(!name||!room)return
+
+        socket.emit("joinRoom",{roomName:room,userName:name})
+
+        document.getElementById("roomTitle").textContent=room
+        document.getElementById("chat").classList.add("open")
+
+        }
+
+        function leaveRoom(){
+
+        socket.disconnect()
+        location.reload()
+
+        }
+
+        /* 送信 */
+
+        function sendMessage(){
+
+        const input=document.getElementById("messageInput")
+        const text=input.value
+
+        if(text==="")return
+
+        socket.emit("chatMessage",text)
+        socket.emit("stopTyping")
+
+        input.value=""
+
+        }
+
+        /* Enter */
+
+        document.getElementById("messageInput").addEventListener("keydown",(e)=>{
+
+        if(e.key==="Enter") sendMessage()
+
+        socket.emit("typing")
+
+        clearTimeout(typingTimeout)
+
+        typingTimeout=setTimeout(()=>{
+        socket.emit("stopTyping")
+        },1000)
+
+        })
+
+        /* 参加者 */
+
+        socket.on("userList",(users)=>{
+
+        const usersDiv=document.getElementById("users")
+        usersDiv.innerHTML=""
+
+        users.forEach(user=>{
+
+        const div=document.createElement("div")
+        div.classList.add("user")
+        div.textContent=user
+
+        usersDiv.appendChild(div)
+
+        })
+
+        })
+
+        /* メッセージ */
+
+        socket.on("chatMessage",(data)=>{
+
+        const messages=document.getElementById("messages")
+
+        const container=document.createElement("div")
+        container.classList.add("msgContainer")
+
+        const header=document.createElement("div")
+        header.classList.add("msgHeader")
+
+        const message=document.createElement("div")
+        message.classList.add("message")
+
+        header.textContent=data.user+" "+data.time
+        message.textContent=data.text
+
+        message.dataset.id=data.id
+
+        const myName=document.getElementById("name").value
+
+        if(data.user===myName){
+        container.classList.add("mine")
+        }else{
+        container.classList.add("other")
+        }
+
+        message.onclick=(e)=>{
+
+        showMenu(
+        e.pageX,
+        e.pageY,
+        data.text,
+        data.id,
+        data.user===myName
+        )
+
+        }
+
+        container.appendChild(header)
+        container.appendChild(message)
+
+        messages.appendChild(container)
+
+        messages.scrollTop=messages.scrollHeight
+
+        })
+
+        /* 削除 */
+
+        socket.on("messageDeleted",(data)=>{
+
+        const msg=document.querySelector('[data-id="'+data.id+'"]')
+
+        if(!msg)return
+
+        msg.textContent=data.text
+        msg.classList.add("deleted")
+
+        })
+
+        /* typing */
+
+        socket.on("typing",(data)=>{
+
+        if(typingUsers[data.user])return
+
+        typingUsers[data.user]=true
+
+        const messages=document.getElementById("messages")
+
+        const div=document.createElement("div")
+        div.classList.add("typing")
+        div.id="typing_"+data.user
+        div.textContent=data.user+" "
+
+        const dots=document.createElement("span")
+        dots.classList.add("dots")
+
+        div.appendChild(dots)
+
+        messages.appendChild(div)
+
+        messages.scrollTop=messages.scrollHeight
+
+        })
+
+        socket.on("stopTyping",(data)=>{
+
+        delete typingUsers[data.user]
+
+        const el=document.getElementById("typing_"+data.user)
+        if(el)el.remove()
+
+        })
+
+        /* ポップアップ */
+
+        socket.on("popup",(data)=>{
+
+        const popupArea=document.getElementById("popupArea")
+
+        const div=document.createElement("div")
+        div.classList.add("popup")
+
+        let text=""
+
+        if(data.type==="join"){
+        text=data.user+" が入室しました"
+        }else{
+        text=data.user+" が退出しました"
+        }
+
+        const span=document.createElement("span")
+        span.textContent=text
+
+        const close=document.createElement("button")
+        close.textContent="✕"
+
+        close.onclick=()=>{
+        div.remove()
+        }
+
+        div.appendChild(span)
+        div.appendChild(close)
+
+        popupArea.appendChild(div)
+
+        setTimeout(()=>{
+        div.remove()
+        },10000)
+
+        })
+
+        /* メニュー */
+
+        function showMenu(x,y,text,id,isMine){
+
+        if(currentMenu) currentMenu.remove()
 
         const menu=document.createElement("div")
         menu.classList.add("msgMenu")
@@ -99,7 +545,7 @@
         copy.textContent="コピー"
 
         copy.onclick=()=>{
-        navigator.clipboard.writeText(msg)
+        navigator.clipboard.writeText(text)
         menu.remove()
         }
 
@@ -127,63 +573,6 @@
         currentMenu=menu
 
         }
-
-        document.addEventListener("click",()=>{
-        if(currentMenu)currentMenu.remove()
-        })
-
-        socket.on("chatMessage",(data)=>{
-
-        const messages=document.getElementById("messages")
-
-        const wrap=document.createElement("div")
-        wrap.classList.add("msgWrapper")
-
-        if(data.user===name){
-        wrap.classList.add("mine")
-        }else{
-        wrap.classList.add("other")
-        }
-
-        const msg=document.createElement("div")
-        msg.classList.add("message")
-        msg.textContent=data.text
-        msg.dataset.id=data.id
-
-        if(data.deleted){
-        msg.classList.add("deleted")
-        }
-
-        msg.onclick=(e)=>{
-
-        showMenu(
-        e.pageX,
-        e.pageY,
-        data.text,
-        data.id,
-        data.user===name
-        )
-
-        }
-
-        wrap.appendChild(msg)
-
-        messages.appendChild(wrap)
-
-        })
-
-        socket.on("messageDeleted",(data)=>{
-
-        const msg=document.querySelector(
-        '[data-id="'+data.id+'"]'
-        )
-
-        if(!msg)return
-
-        msg.textContent=data.text
-        msg.classList.add("deleted")
-
-        })
 
     </script>
 
