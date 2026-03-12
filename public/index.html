@@ -210,6 +210,11 @@
                 font-size: 16px;
                 cursor: pointer;
             }
+
+        .typing {
+            opacity: 0.6;
+            font-style: italic;
+        }
     </style>
 
 </head>
@@ -369,6 +374,69 @@
         setTimeout(()=>{
         div.remove()
         },10000)
+
+        })
+
+        let typing=false
+        let typingTimeout
+
+        document.getElementById("messageInput").addEventListener("input",()=>{
+
+        if(!typing){
+        typing=true
+        socket.emit("typing")
+        }
+
+        clearTimeout(typingTimeout)
+
+        typingTimeout=setTimeout(()=>{
+        typing=false
+        socket.emit("stopTyping")
+        },2000)
+
+        })
+
+        socket.on("typing",(data)=>{
+
+        const messages=document.getElementById("messages")
+
+        const id="typing_"+data.user
+
+        if(document.getElementById(id)) return
+
+        const wrapper=document.createElement("div")
+        wrapper.id=id
+        wrapper.classList.add("msgWrapper","typing")
+
+        const header=document.createElement("div")
+        header.classList.add("msgHeader")
+        header.textContent=data.user+" typing..."
+
+        const message=document.createElement("div")
+        message.classList.add("message")
+        message.textContent="..."
+
+        wrapper.appendChild(message)
+        wrapper.appendChild(header)
+
+        if(data.user===document.getElementById("name").value){
+        wrapper.classList.add("mine")
+        }else{
+        wrapper.classList.add("other")
+        }
+
+        messages.appendChild(wrapper)
+
+        messages.scrollTop=messages.scrollHeight
+
+        })
+
+        socket.on("stopTyping",(data)=>{
+
+        const id="typing_"+data.user
+        const el=document.getElementById(id)
+
+        if(el) el.remove()
 
         })
 

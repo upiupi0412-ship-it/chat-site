@@ -12,6 +12,8 @@ const rooms = {}
 
 io.on("connection", (socket) => {
 
+    /* 入室 */
+
     socket.on("joinRoom", ({ roomName, userName }) => {
 
         if (!rooms[roomName]) {
@@ -31,13 +33,19 @@ io.on("connection", (socket) => {
         socket.roomName = roomName
         socket.userName = userName
 
-        io.to(roomName).emit("userList", room.users.map(u => u.name))
+        io.to(roomName).emit(
+            "userList",
+            room.users.map(u => u.name)
+        )
 
         io.to(roomName).emit("popup", {
             type: "join",
             user: userName
         })
     })
+
+
+    /* メッセージ */
 
     socket.on("chatMessage", (msg) => {
 
@@ -54,7 +62,45 @@ io.on("connection", (socket) => {
             text: msg,
             time: time
         })
+
+        /* 送信したら typing を止める */
+
+        io.to(roomName).emit("stopTyping", {
+            user: socket.userName
+        })
+
     })
+
+
+    /* タイピング開始 */
+
+    socket.on("typing", () => {
+
+        const roomName = socket.roomName
+        if (!roomName) return
+
+        io.to(roomName).emit("typing", {
+            user: socket.userName
+        })
+
+    })
+
+
+    /* タイピング停止 */
+
+    socket.on("stopTyping", () => {
+
+        const roomName = socket.roomName
+        if (!roomName) return
+
+        io.to(roomName).emit("stopTyping", {
+            user: socket.userName
+        })
+
+    })
+
+
+    /* 切断 */
 
     socket.on("disconnect", () => {
 
@@ -64,14 +110,26 @@ io.on("connection", (socket) => {
         const room = rooms[roomName]
         if (!room) return
 
-        room.users = room.users.filter(u => u.id !== socket.id)
+        room.users = room.users.filter(
+            u => u.id !== socket.id
+        )
 
-        io.to(roomName).emit("userList", room.users.map(u => u.name))
+        io.to(roomName).emit(
+            "userList",
+            room.users.map(u => u.name)
+        )
 
         io.to(roomName).emit("popup", {
             type: "leave",
             user: socket.userName
         })
+
+        /* typing削除 */
+
+        io.to(roomName).emit("stopTyping", {
+            user: socket.userName
+        })
+
     })
 
 })
