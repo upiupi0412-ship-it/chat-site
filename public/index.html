@@ -17,7 +17,7 @@
             overflow-x: hidden;
         }
 
-        /* 入室画面 */
+        /* 入室 */
 
         #home {
             position: absolute;
@@ -206,6 +206,24 @@
             cursor: pointer;
         }
 
+        /* 退出バー */
+
+        #leaveBar {
+            border-top: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+
+        #leaveButton {
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            padding: 12px 40px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
         /* ポップアップ */
 
         #popupArea {
@@ -269,6 +287,10 @@
 
         </div>
 
+        <div id="leaveBar">
+            <button id="leaveButton" onclick="leaveRoom()">退出</button>
+        </div>
+
     </div>
 
     <div id="popupArea"></div>
@@ -281,6 +303,8 @@
 
         let typing=false
         let typingTimeout
+
+        /* 入室 */
 
         function joinRoom(){
 
@@ -295,6 +319,24 @@
         document.getElementById("chat").classList.add("open")
 
         }
+
+        /* 退出 */
+
+        function leaveRoom(){
+
+        socket.disconnect()
+
+        document.getElementById("chat").classList.remove("open")
+
+        setTimeout(()=>{
+
+        location.reload()
+
+        },400)
+
+        }
+
+        /* メッセージ送信 */
 
         function sendMessage(){
 
@@ -311,6 +353,8 @@
 
         }
 
+        /* Enter送信 */
+
         document.getElementById("messageInput").addEventListener("keydown",(e)=>{
 
         if(e.key==="Enter"){
@@ -318,6 +362,8 @@
         }
 
         })
+
+        /* typing */
 
         document.getElementById("messageInput").addEventListener("input",()=>{
 
@@ -339,6 +385,8 @@
 
         })
 
+        /* 参加者 */
+
         socket.on("userList",(users)=>{
 
         const usersDiv=document.getElementById("users")
@@ -355,6 +403,8 @@
         })
 
         })
+
+        /* メッセージ */
 
         socket.on("chatMessage",(data)=>{
 
@@ -385,6 +435,8 @@
         messages.scrollTop=messages.scrollHeight
 
         })
+
+        /* typing表示 */
 
         socket.on("typing",(data)=>{
 
@@ -422,6 +474,8 @@
 
         })
 
+        /* typing削除 */
+
         socket.on("stopTyping",(data)=>{
 
         const id="typing_"+data.user
@@ -430,6 +484,8 @@
         if(el)el.remove()
 
         })
+
+        /* ポップアップ */
 
         socket.on("popup",(data)=>{
 
