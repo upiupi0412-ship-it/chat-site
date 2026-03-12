@@ -9,10 +9,12 @@
 
     <style>
 
-        body {
+        html, body {
             margin: 0;
+            height: 100%;
             font-family: sans-serif;
             background: #f5f5f5;
+            overflow-x: hidden;
         }
 
         /* 入室画面 */
@@ -248,7 +250,6 @@
 
     </div>
 
-
     <div id="chat">
 
         <div id="topbar">
@@ -270,9 +271,7 @@
 
     </div>
 
-
     <div id="popupArea"></div>
-
 
     <script src="/socket.io/socket.io.js"></script>
 
@@ -282,8 +281,6 @@
 
         let typing=false
         let typingTimeout
-
-        /* 入室 */
 
         function joinRoom(){
 
@@ -298,8 +295,6 @@
         document.getElementById("chat").classList.add("open")
 
         }
-
-        /* メッセージ送信 */
 
         function sendMessage(){
 
@@ -316,8 +311,6 @@
 
         }
 
-        /* Enter送信 */
-
         document.getElementById("messageInput").addEventListener("keydown",(e)=>{
 
         if(e.key==="Enter"){
@@ -325,8 +318,6 @@
         }
 
         })
-
-        /* typing送信 */
 
         document.getElementById("messageInput").addEventListener("input",()=>{
 
@@ -348,8 +339,6 @@
 
         })
 
-        /* 参加者 */
-
         socket.on("userList",(users)=>{
 
         const usersDiv=document.getElementById("users")
@@ -366,8 +355,6 @@
         })
 
         })
-
-        /* メッセージ受信 */
 
         socket.on("chatMessage",(data)=>{
 
@@ -399,8 +386,6 @@
 
         })
 
-        /* typing表示 */
-
         socket.on("typing",(data)=>{
 
         const id="typing_"+data.user
@@ -420,8 +405,7 @@
         const message=document.createElement("div")
         message.classList.add("message")
 
-        message.innerHTML=
-        '<div class="typingDots"><span>.</span><span>.</span><span>.</span></div>'
+        message.innerHTML='<div class="typingDots"><span>.</span><span>.</span><span>.</span></div>'
 
         wrapper.appendChild(message)
         wrapper.appendChild(header)
@@ -438,8 +422,6 @@
 
         })
 
-        /* typing削除 */
-
         socket.on("stopTyping",(data)=>{
 
         const id="typing_"+data.user
@@ -448,8 +430,6 @@
         if(el)el.remove()
 
         })
-
-        /* ポップアップ */
 
         socket.on("popup",(data)=>{
 
