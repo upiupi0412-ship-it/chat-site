@@ -52,10 +52,12 @@ io.on("connection", (socket) => {
         const room = socket.roomName
         if (!room) return
 
-        const time = new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-        })
+        const now = new Date()
+
+        const hour = now.getHours()
+        const minute = now.getMinutes().toString().padStart(2,"0")
+
+        const time = hour + ":" + minute
 
         const msg = {
             id: Date.now()+"_"+Math.random(),
@@ -86,7 +88,7 @@ io.on("connection", (socket) => {
         if(msg.user!==socket.userName) return
 
         msg.deleted=true
-        msg.text="このメッセージは削除されました"
+        msg.text="(message deleted)"
 
         io.to(room).emit("messageDeleted",{
             id:id,
