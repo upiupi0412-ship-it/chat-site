@@ -9,133 +9,112 @@ const io = new Server(server)
 app.use(express.static("public"))
 
 const rooms = {}
+const messages = {}
 
-io.on("connection", (socket) => {
+io.on("connection",(socket)=>{
 
-    /* 入室 */
+socket.on("joinRoom",({roomName,userName})=>{
 
-    socket.on("joinRoom", ({ roomName, userName }) => {
+if(!rooms[roomName]){
+rooms[roomName]={users:[]}
+messages[roomName]=[]
+}
 
-        if (!rooms[roomName]) {
-            rooms[roomName] = { users: [] }
-        }
+const user={
+id:socket.id,
+name:userName
+}
 
-        const room = rooms[roomName]
+rooms[roomName].users.push(user)
 
-        const user = {
-            id: socket.id,
-            name: userName
-        }
+socket.join(roomName)
+socket.roomName=roomName
+socket.userName=userName
 
-        room.users.push(user)
+io.to(roomName).emit(
+"userList",
+rooms[roomName].users.map(u=>u.name)
+)
 
-        socket.join(roomName)
-        socket.roomName = roomName
-        socket.userName = userName
+messages[roomName].forEach(msg=>{
+socket.emit("chatMessage",msg)
+})
 
-        io.to(roomName).emit(
-            "userList",
-            room.users.map(u => u.name)
-        )
-
-        io.to(roomName).emit("popup", {
-            type: "join",
-            user: userName
-        })
-    })
-
-
-    /* メッセージ */
-
-    socket.on("chatMessage", (msg) => {
-
-        const roomName = socket.roomName
-        if (!roomName) return
-
-        const time = new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-        })
-
-        io.to(roomName).emit("chatMessage", {
-            user: socket.userName,
-            text: msg,
-            time: time
-        })
-
-        /* 送信したら typing を止める */
-
-        io.to(roomName).emit("stopTyping", {
-            user: socket.userName
-        })
-
-    })
-
-
-    /* タイピング開始 */
-
-    socket.on("typing", () => {
-
-        const roomName = socket.roomName
-        if (!roomName) return
-
-        io.to(roomName).emit("typing", {
-            user: socket.userName
-        })
-
-    })
-
-
-    /* タイピング停止 */
-
-    socket.on("stopTyping", () => {
-
-        const roomName = socket.roomName
-        if (!roomName) return
-
-        io.to(roomName).emit("stopTyping", {
-            user: socket.userName
-        })
-
-    })
-
-
-    /* 切断 */
-
-    socket.on("disconnect", () => {
-
-        const roomName = socket.roomName
-        if (!roomName) return
-
-        const room = rooms[roomName]
-        if (!room) return
-
-        room.users = room.users.filter(
-            u => u.id !== socket.id
-        )
-
-        io.to(roomName).emit(
-            "userList",
-            room.users.map(u => u.name)
-        )
-
-        io.to(roomName).emit("popup", {
-            type: "leave",
-            user: socket.userName
-        })
-
-        /* typing削除 */
-
-        io.to(roomName).emit("stopTyping", {
-            user: socket.userName
-        })
-
-    })
+io.to(roomName).emit("popup",{
+type:"join",
+user:userName
+})
 
 })
 
-const PORT = process.env.PORT || 3000
+socket.on("chatMessage",(text)=>{
 
-server.listen(PORT, () => {
-    console.log("server started")
+const room=socket.roomName
+if(!room)return
+
+const time=new Date().toLocaleTimeString([],{
+hour:"2-digit",
+minute:"2-digit"
+})
+
+const msg={
+id:Date.now()+"_"+Math.random(),
+user:socket.userName,
+text:text,
+time:time,
+deleted:false
+}
+
+messages[room].push(msg)
+
+io.to(room).emit("chatMessage",msg)
+
+})
+
+socket.on("deleteMessage",(id)=>{
+
+const room=socket.roomName
+if(!room)return
+
+const msg=messages[room].find(m=>m.id===id)
+
+if(!msg)return
+if(msg.user!==socket.userName)return
+
+msg.deleted=true
+msg.text="このメッセージは削除されました"
+
+io.to(room).emit("messageDeleted",{
+id:id,
+text:msg.text
+})
+
+})
+
+socket.on("disconnect",()=>{
+
+const room=socket.roomName
+if(!room)return
+
+rooms[room].users=
+rooms[room].users.filter(u=>u.id!==socket.id)
+
+io.to(room).emit(
+"userList",
+rooms[room].users.map(u=>u.name)
+)
+
+io.to(room).emit("popup",{
+type:"leave",
+user:socket.userName
+})
+
+})
+
+})
+
+const PORT=process.env.PORT||3000
+
+server.listen(PORT,()=>{
+console.log("server started")
 })
