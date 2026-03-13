@@ -16,8 +16,6 @@
             overflow-x: hidden;
         }
 
-        /* 入室画面 */
-
         #home {
             position: absolute;
             width: 100%;
@@ -54,8 +52,6 @@
             cursor: pointer;
         }
 
-        /* チャット */
-
         #chat {
             position: absolute;
             width: 100%;
@@ -70,8 +66,6 @@
             #chat.open {
                 transform: translateX(0);
             }
-
-        /* 上バー */
 
         #topbar {
             padding: 15px;
@@ -105,8 +99,6 @@
             font-size: 14px;
         }
 
-        /* 退出ボタン */
-
         #leaveButton {
             background: #ff4b4b;
             color: white;
@@ -122,8 +114,6 @@
             #leaveButton:hover {
                 background: #d32f2f;
             }
-
-        /* メッセージ */
 
         #messages {
             flex: 1;
@@ -165,8 +155,6 @@
             background: #eee;
         }
 
-        /* 名前と時間 */
-
         .msgHeader {
             font-size: 12px;
             color: #888;
@@ -183,8 +171,6 @@
         .other .msgHeader {
             left: 10px;
         }
-
-        /* 入力 */
 
         #inputArea {
             display: flex;
@@ -210,38 +196,6 @@
             color: white;
             cursor: pointer;
         }
-
-        /* popup */
-
-        #popupArea {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-
-        .popup {
-            background: #333;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-            .popup button {
-                background: none;
-                border: none;
-                color: white;
-                font-size: 16px;
-                cursor: pointer;
-            }
-
-        /* メニュー */
 
         .msgMenu {
             position: absolute;
@@ -309,8 +263,6 @@
 
     </div>
 
-    <div id="popupArea"></div>
-
     <script src="/socket.io/socket.io.js"></script>
 
     <script>
@@ -318,7 +270,6 @@
         const socket=io()
 
         let currentMenu=null
-        let typingTimeout
 
         function joinRoom(){
 
@@ -354,15 +305,11 @@
 
         }
 
-        /* Enter */
-
         document.getElementById("messageInput").addEventListener("keydown",(e)=>{
 
         if(e.key==="Enter") sendMessage()
 
         })
-
-        /* メッセージ受信 */
 
         socket.on("chatMessage",(data)=>{
 
@@ -403,7 +350,21 @@
 
         })
 
-        /* メニュー */
+        /* 削除受信 */
+
+        socket.on("messageDeleted",(data)=>{
+
+        const msg=document.querySelector('[data-id="'+data.id+'"]')
+
+        if(!msg) return
+
+        const container = msg.closest(".msgContainer")
+
+        if(container){
+        container.remove()
+        }
+
+        })
 
         function showMenu(messageElement,text,id,isMine){
 
@@ -443,8 +404,6 @@
         currentMenu=menu
 
         }
-
-        /* 外クリックでメニュー閉じる */
 
         document.addEventListener("click",()=>{
 
