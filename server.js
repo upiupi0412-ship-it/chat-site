@@ -36,6 +36,7 @@ io.on("connection", (socket) => {
             rooms[roomName].users.map(u => u.name)
         )
 
+        // 過去メッセージ送信
         messages[roomName].forEach(m=>{
             socket.emit("chatMessage",m)
         })
@@ -57,42 +58,45 @@ io.on("connection", (socket) => {
         const hour = now.getHours()
         const minute = now.getMinutes().toString().padStart(2,"0")
 
-        const time = hour + ":" + minute
+        const time = `${hour}:${minute}`
 
         const msg = {
             id: Date.now()+"_"+Math.random(),
             user: socket.userName,
             text: text,
-            time: time,
-            deleted:false
+            time: time
         }
 
         messages[room].push(msg)
 
         io.to(room).emit("chatMessage", msg)
 
-        io.to(room).emit("stopTyping", {
+        socket.to(room).emit("stopTyping", {
             user: socket.userName
         })
     })
 
 
+    // メッセージ削除
     socket.on("deleteMessage",(id)=>{
 
-        const room=socket.roomName
-        if(!room) return
+        const room = socket.roomName
+        if (!room) return
 
-        const msg=messages[room].find(m=>m.id===id)
+        const index = messages[room].findIndex(m => m.id === id)
 
-        if(!msg) return
-        if(msg.user!==socket.userName) return
+        if (index === -1) return
 
-        msg.deleted=true
-        msg.text="(message deleted)"
+        const msg = messages[room][index]
 
+        if (msg.user !== socket.userName) return
+
+        // 配列から削除
+        messages[room].splice(index,1)
+
+        // クライアントに削除通知
         io.to(room).emit("messageDeleted",{
-            id:id,
-            text:msg.text
+            id:id
         })
 
     })
@@ -103,7 +107,7 @@ io.on("connection", (socket) => {
         const room = socket.roomName
         if (!room) return
 
-        io.to(room).emit("typing", {
+        socket.to(room).emit("typing", {
             user: socket.userName
         })
     })
@@ -114,7 +118,7 @@ io.on("connection", (socket) => {
         const room = socket.roomName
         if (!room) return
 
-        io.to(room).emit("stopTyping", {
+        socket.to(room).emit("stopTyping", {
             user: socket.userName
         })
     })
@@ -124,6 +128,7 @@ io.on("connection", (socket) => {
 
         const room = socket.roomName
         if (!room) return
+        if (!rooms[room]) return
 
         rooms[room].users =
         rooms[room].users.filter(u => u.id !== socket.id)
@@ -141,6 +146,17 @@ io.on("connection", (socket) => {
         io.to(room).emit("stopTyping", {
             user: socket.userName
         })
+
+        // 部屋が空なら完全削除
+        if (rooms[room].users.length === 0) {
+
+            delete rooms[room]
+            delete messages[room]
+
+            console.log("room reset:",room)
+
+        }
+
     })
 
 })
