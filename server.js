@@ -36,7 +36,6 @@ io.on("connection", (socket) => {
             rooms[roomName].users.map(u => u.name)
         )
 
-        // 過去メッセージ送信
         messages[roomName].forEach(m=>{
             socket.emit("chatMessage",m)
         })
@@ -54,6 +53,9 @@ io.on("connection", (socket) => {
         if (!room) return
 
         const now = new Date()
+
+        // UTC+9補正
+        now.setHours(now.getHours() + 9)
 
         const hour = now.getHours()
         const minute = now.getMinutes().toString().padStart(2,"0")
@@ -77,7 +79,6 @@ io.on("connection", (socket) => {
     })
 
 
-    // メッセージ削除
     socket.on("deleteMessage",(id)=>{
 
         const room = socket.roomName
@@ -91,13 +92,9 @@ io.on("connection", (socket) => {
 
         if (msg.user !== socket.userName) return
 
-        // 配列から削除
         messages[room].splice(index,1)
 
-        // クライアントに削除通知
-        io.to(room).emit("messageDeleted",{
-            id:id
-        })
+        io.to(room).emit("messageDeleted",{ id })
 
     })
 
@@ -147,7 +144,6 @@ io.on("connection", (socket) => {
             user: socket.userName
         })
 
-        // 部屋が空なら完全削除
         if (rooms[room].users.length === 0) {
 
             delete rooms[room]
