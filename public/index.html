@@ -29,15 +29,11 @@
             gap: 20px;
         }
 
-        /* タイトル */
-
         #title {
             font-size: 42px;
             font-weight: bold;
             margin-bottom: 10px;
         }
-
-        /* 入力 */
 
         #home input {
             width: 320px;
@@ -81,8 +77,8 @@
             padding: 15px;
             border-bottom: 1px solid #ddd;
             display: flex;
+            justify-content: space-between;
             align-items: flex-start;
-            gap: 15px;
         }
 
         #roomInfo {
@@ -94,25 +90,6 @@
             margin: 0;
             font-size: 20px;
         }
-
-        /* 退出ボタン */
-
-        #leaveButton {
-            background: #ff4b4b;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            height: 32px;
-        }
-
-            #leaveButton:hover {
-                background: #d32f2f;
-            }
-
-        /* 参加者 */
 
         #users {
             display: flex;
@@ -127,6 +104,24 @@
             border-radius: 20px;
             font-size: 14px;
         }
+
+        /* 退出ボタン */
+
+        #leaveButton {
+            background: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            height: 32px;
+            margin-top: 2px;
+        }
+
+            #leaveButton:hover {
+                background: #d32f2f;
+            }
 
         /* メッセージ */
 
@@ -325,12 +320,12 @@
 
         <div id="topbar">
 
-            <button id="leaveButton" onclick="leaveRoom()">退出</button>
-
             <div id="roomInfo">
                 <h2 id="roomTitle"></h2>
                 <div id="users"></div>
             </div>
+
+            <button id="leaveButton" onclick="leaveRoom()">退出</button>
 
         </div>
 
@@ -379,8 +374,6 @@
 
         }
 
-        /* 送信 */
-
         function sendMessage(){
 
         const input=document.getElementById("messageInput")
@@ -395,8 +388,6 @@
 
         }
 
-        /* Enter */
-
         document.getElementById("messageInput").addEventListener("keydown",(e)=>{
 
         if(e.key==="Enter") sendMessage()
@@ -410,8 +401,6 @@
         },1000)
 
         })
-
-        /* 参加者 */
 
         socket.on("userList",(users)=>{
 
@@ -429,8 +418,6 @@
         })
 
         })
-
-        /* メッセージ */
 
         socket.on("chatMessage",(data)=>{
 
@@ -471,8 +458,6 @@
 
         })
 
-        /* 削除 */
-
         socket.on("messageDeleted",(data)=>{
 
         const msg=document.querySelector('[data-id="'+data.id+'"]')
@@ -486,81 +471,6 @@
         }
 
         })
-
-        /* typing */
-
-        socket.on("typing",(data)=>{
-
-        if(typingUsers[data.user])return
-
-        typingUsers[data.user]=true
-
-        const messages=document.getElementById("messages")
-
-        const div=document.createElement("div")
-        div.classList.add("typing")
-        div.id="typing_"+data.user
-        div.textContent=data.user+" "
-
-        const dots=document.createElement("span")
-        dots.classList.add("dots")
-
-        div.appendChild(dots)
-
-        messages.appendChild(div)
-
-        messages.scrollTop=messages.scrollHeight
-
-        })
-
-        socket.on("stopTyping",(data)=>{
-
-        delete typingUsers[data.user]
-
-        const el=document.getElementById("typing_"+data.user)
-        if(el)el.remove()
-
-        })
-
-        /* popup */
-
-        socket.on("popup",(data)=>{
-
-        const popupArea=document.getElementById("popupArea")
-
-        const div=document.createElement("div")
-        div.classList.add("popup")
-
-        let text=""
-
-        if(data.type==="join"){
-        text=data.user+" が入室しました"
-        }else{
-        text=data.user+" が退出しました"
-        }
-
-        const span=document.createElement("span")
-        span.textContent=text
-
-        const close=document.createElement("button")
-        close.textContent="✕"
-
-        close.onclick=()=>{
-        div.remove()
-        }
-
-        div.appendChild(span)
-        div.appendChild(close)
-
-        popupArea.appendChild(div)
-
-        setTimeout(()=>{
-        div.remove()
-        },10000)
-
-        })
-
-        /* メニュー */
 
         function showMenu(messageElement,text,id,isMine){
 
