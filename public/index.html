@@ -262,16 +262,22 @@
 
         .msgMenu {
             position: absolute;
-            background: white;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-            z-index: 999;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 8px;
+            background: rgba(255,255,255,0.9);
+            padding: 4px 8px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
 
             .msgMenu div {
-                padding: 8px 14px;
                 cursor: pointer;
+                font-size: 13px;
+                padding: 2px 6px;
+                border-radius: 4px;
             }
 
                 .msgMenu div:hover {
@@ -426,16 +432,8 @@
         container.classList.add("other")
         }
 
-        message.onclick=(e)=>{
-
-        showMenu(
-        e.pageX,
-        e.pageY,
-        data.text,
-        data.id,
-        data.user===myName
-        )
-
+        message.onclick=()=>{
+        showMenu(message,data.text,data.id,data.user===myName)
         }
 
         container.appendChild(header)
@@ -535,7 +533,7 @@
 
         /* メニュー */
 
-        function showMenu(x,y,text,id,isMine){
+        function showMenu(messageElement,text,id,isMine){
 
         if(currentMenu) currentMenu.remove()
 
@@ -566,15 +564,11 @@
 
         }
 
-        menu.style.left=x+"px"
-        menu.style.top=y+"px"
-
-        document.body.appendChild(menu)
+        messageElement.appendChild(menu)
 
         currentMenu=menu
 
         }
-
     </script>
 
 </body>
