@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
     <meta charset="UTF-8">
     <meta name="robots" content="noindex">
-    <title>Chat</title>
+    <title>Chat Web</title>
 
     <style>
 
@@ -15,7 +16,7 @@
             overflow-x: hidden;
         }
 
-        /* 入室 */
+        /* 入室画面 */
 
         #home {
             position: absolute;
@@ -28,24 +29,34 @@
             gap: 20px;
         }
 
-            #home input {
-                width: 320px;
-                padding: 15px;
-                font-size: 18px;
-                border-radius: 8px;
-                border: 1px solid #ccc;
-            }
+        /* タイトル */
 
-            #home button {
-                width: 320px;
-                padding: 16px;
-                font-size: 20px;
-                border: none;
-                border-radius: 8px;
-                background: #4CAF50;
-                color: white;
-                cursor: pointer;
-            }
+        #title {
+            font-size: 42px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* 入力 */
+
+        #home input {
+            width: 320px;
+            padding: 15px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        #home button {
+            width: 320px;
+            padding: 16px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
 
         /* チャット */
 
@@ -108,7 +119,7 @@
             display: flex;
             flex-direction: column;
             max-width: 60%;
-            margin-bottom: 18px;
+            margin-bottom: 22px;
         }
 
         .mine {
@@ -134,11 +145,13 @@
             background: #eee;
         }
 
+        /* 名前と時間 */
+
         .msgHeader {
             font-size: 12px;
             color: #888;
             position: absolute;
-            top: -14px;
+            top: -26px;
             white-space: nowrap;
         }
 
@@ -178,7 +191,7 @@
             cursor: pointer;
         }
 
-        /* 退出バー */
+        /* 退出 */
 
         #leaveBar {
             padding: 8px;
@@ -195,7 +208,7 @@
             cursor: pointer;
         }
 
-        /* ポップアップ */
+        /* popup */
 
         #popupArea {
             position: fixed;
@@ -232,10 +245,7 @@
             color: #777;
         }
 
-        /* ドットアニメーション */
-
         @keyframes dots {
-
             0% {
                 content: ".";
             }
@@ -285,44 +295,54 @@
                 .msgMenu div:hover {
                     background: #eee;
                 }
-
-        .deleted {
-            font-style: italic;
-            color: #777;
-            background: #ddd !important;
-        }
     </style>
+
 </head>
 
 <body>
 
     <div id="home">
+
+        <div id="title">Chat Web</div>
+
         <input id="name" placeholder="名前">
         <input id="room" placeholder="部屋名">
+
         <button onclick="joinRoom()">入る</button>
+
     </div>
+
 
     <div id="chat">
 
         <div id="topbar">
+
             <h2 id="roomTitle"></h2>
+
             <div id="users"></div>
+
         </div>
 
         <div id="messages"></div>
 
         <div id="inputArea">
+
             <input id="messageInput" placeholder="メッセージ">
+
             <button id="sendButton" onclick="sendMessage()">送信</button>
+
         </div>
 
         <div id="leaveBar">
+
             <button id="leaveButton" onclick="leaveRoom()">退出</button>
+
         </div>
 
     </div>
 
     <div id="popupArea"></div>
+
 
     <script src="/socket.io/socket.io.js"></script>
 
@@ -498,7 +518,7 @@
 
         })
 
-        /* ポップアップ */
+        /* popup */
 
         socket.on("popup",(data)=>{
 
@@ -574,6 +594,7 @@
         currentMenu=menu
 
         }
+
     </script>
 
 </body>
