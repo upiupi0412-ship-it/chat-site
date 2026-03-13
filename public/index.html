@@ -241,36 +241,6 @@
                 cursor: pointer;
             }
 
-        /* typing */
-
-        .typing {
-            font-style: italic;
-            color: #777;
-        }
-
-        @keyframes dots {
-            0% {
-                content: ".";
-            }
-
-            33% {
-                content: "..";
-            }
-
-            66% {
-                content: "...";
-            }
-
-            100% {
-                content: ".";
-            }
-        }
-
-        .dots::after {
-            content: ".";
-            animation: dots 1.2s infinite;
-        }
-
         /* メニュー */
 
         .msgMenu {
@@ -315,7 +285,6 @@
 
     </div>
 
-
     <div id="chat">
 
         <div id="topbar">
@@ -334,7 +303,6 @@
         <div id="inputArea">
 
             <input id="messageInput" placeholder="メッセージ">
-
             <button id="sendButton" onclick="sendMessage()">送信</button>
 
         </div>
@@ -349,9 +317,8 @@
 
         const socket=io()
 
-        let typingUsers={}
-        let typingTimeout
         let currentMenu=null
+        let typingTimeout
 
         function joinRoom(){
 
@@ -382,42 +349,20 @@
         if(text==="")return
 
         socket.emit("chatMessage",text)
-        socket.emit("stopTyping")
 
         input.value=""
 
         }
 
+        /* Enter */
+
         document.getElementById("messageInput").addEventListener("keydown",(e)=>{
 
         if(e.key==="Enter") sendMessage()
 
-        socket.emit("typing")
-
-        clearTimeout(typingTimeout)
-
-        typingTimeout=setTimeout(()=>{
-        socket.emit("stopTyping")
-        },1000)
-
         })
 
-        socket.on("userList",(users)=>{
-
-        const usersDiv=document.getElementById("users")
-        usersDiv.innerHTML=""
-
-        users.forEach(user=>{
-
-        const div=document.createElement("div")
-        div.classList.add("user")
-        div.textContent=user
-
-        usersDiv.appendChild(div)
-
-        })
-
-        })
+        /* メッセージ受信 */
 
         socket.on("chatMessage",(data)=>{
 
@@ -434,7 +379,6 @@
 
         header.textContent=data.user+" "+data.time
         message.textContent=data.text
-
         message.dataset.id=data.id
 
         const myName=document.getElementById("name").value
@@ -445,7 +389,8 @@
         container.classList.add("other")
         }
 
-        message.onclick=()=>{
+        message.onclick=(e)=>{
+        e.stopPropagation()
         showMenu(message,data.text,data.id,data.user===myName)
         }
 
@@ -458,19 +403,7 @@
 
         })
 
-        socket.on("messageDeleted",(data)=>{
-
-        const msg=document.querySelector('[data-id="'+data.id+'"]')
-
-        if(!msg) return
-
-        const container = msg.closest(".msgContainer")
-
-        if(container){
-        container.remove()
-        }
-
-        })
+        /* メニュー */
 
         function showMenu(messageElement,text,id,isMine){
 
@@ -478,6 +411,8 @@
 
         const menu=document.createElement("div")
         menu.classList.add("msgMenu")
+
+        menu.onclick=(e)=>e.stopPropagation()
 
         const copy=document.createElement("div")
         copy.textContent="コピー"
@@ -508,6 +443,17 @@
         currentMenu=menu
 
         }
+
+        /* 外クリックでメニュー閉じる */
+
+        document.addEventListener("click",()=>{
+
+        if(currentMenu){
+        currentMenu.remove()
+        currentMenu=null
+        }
+
+        })
 
     </script>
 
