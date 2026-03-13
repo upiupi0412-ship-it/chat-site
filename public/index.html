@@ -268,7 +268,6 @@
     <script>
 
         const socket=io()
-
         let currentMenu=null
 
         function joinRoom(){
@@ -286,10 +285,8 @@
         }
 
         function leaveRoom(){
-
         socket.disconnect()
         location.reload()
-
         }
 
         function sendMessage(){
@@ -302,13 +299,10 @@
         socket.emit("chatMessage",text)
 
         input.value=""
-
         }
 
         document.getElementById("messageInput").addEventListener("keydown",(e)=>{
-
         if(e.key==="Enter") sendMessage()
-
         })
 
         socket.on("chatMessage",(data)=>{
@@ -345,23 +339,35 @@
         container.appendChild(message)
 
         messages.appendChild(container)
-
         messages.scrollTop=messages.scrollHeight
 
         })
 
-        /* 削除受信 */
+        /* メッセージ削除 */
 
         socket.on("messageDeleted",(data)=>{
 
         const msg=document.querySelector('[data-id="'+data.id+'"]')
-
         if(!msg) return
 
-        const container = msg.closest(".msgContainer")
+        const container=msg.closest(".msgContainer")
+        if(container) container.remove()
 
-        if(container){
-        container.remove()
+        })
+
+        /* メッセージ編集 */
+
+        socket.on("messageEdited",(data)=>{
+
+        const msg=document.querySelector('[data-id="'+data.id+'"]')
+        if(!msg) return
+
+        msg.textContent=data.text
+
+        const header=msg.previousElementSibling
+
+        if(!header.textContent.includes("(編集済み)")){
+        header.textContent+=" (編集済み)"
         }
 
         })
@@ -372,12 +378,10 @@
 
         const menu=document.createElement("div")
         menu.classList.add("msgMenu")
-
         menu.onclick=(e)=>e.stopPropagation()
 
         const copy=document.createElement("div")
         copy.textContent="コピー"
-
         copy.onclick=()=>{
         navigator.clipboard.writeText(text)
         menu.remove()
@@ -386,6 +390,28 @@
         menu.appendChild(copy)
 
         if(isMine){
+
+        const edit=document.createElement("div")
+        edit.textContent="編集"
+
+        edit.onclick=()=>{
+
+        const newText=prompt("メッセージを編集",text)
+
+        if(newText && newText!==text){
+
+        socket.emit("editMessage",{
+        id:id,
+        text:newText
+        })
+
+        }
+
+        menu.remove()
+
+        }
+
+        menu.appendChild(edit)
 
         const del=document.createElement("div")
         del.textContent="削除"
@@ -400,18 +426,15 @@
         }
 
         messageElement.appendChild(menu)
-
         currentMenu=menu
 
         }
 
         document.addEventListener("click",()=>{
-
         if(currentMenu){
         currentMenu.remove()
         currentMenu=null
         }
-
         })
 
     </script>

@@ -155,6 +155,21 @@ io.on("connection", (socket) => {
 
     })
 
+    socket.on("editMessage",(data)=>{
+
+        const msg = messages.find(m => m.id === data.id)
+        if(!msg) return
+
+        msg.text = data.text
+        msg.edited = true
+
+        io.to(msg.room).emit("messageEdited",{
+        id:data.id,
+        text:data.text
+        })
+
+    })
+
 })
 
 const PORT = process.env.PORT || 3000
