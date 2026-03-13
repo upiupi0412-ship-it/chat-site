@@ -80,6 +80,14 @@
         #topbar {
             padding: 15px;
             border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        #roomInfo {
+            display: flex;
+            flex-direction: column;
         }
 
         #roomTitle {
@@ -87,18 +95,35 @@
             font-size: 20px;
         }
 
+        /* 退出ボタン */
+
+        #leaveButton {
+            background: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            height: 32px;
+        }
+
+            #leaveButton:hover {
+                background: #d32f2f;
+            }
+
         /* 参加者 */
 
         #users {
             display: flex;
             gap: 10px;
-            margin-top: 8px;
+            margin-top: 6px;
             flex-wrap: wrap;
         }
 
         .user {
             background: #eee;
-            padding: 5px 10px;
+            padding: 4px 10px;
             border-radius: 20px;
             font-size: 14px;
         }
@@ -111,7 +136,6 @@
             padding: 15px;
             display: flex;
             flex-direction: column;
-            position: relative;
         }
 
         .msgContainer {
@@ -135,6 +159,7 @@
             border-radius: 15px;
             font-size: 16px;
             word-break: break-word;
+            cursor: pointer;
         }
 
         .mine .message {
@@ -188,23 +213,6 @@
             border-radius: 8px;
             background: #4CAF50;
             color: white;
-            cursor: pointer;
-        }
-
-        /* 退出 */
-
-        #leaveBar {
-            padding: 8px;
-            border-top: 1px solid #ddd;
-            text-align: center;
-        }
-
-        #leaveButton {
-            background: #e53935;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
             cursor: pointer;
         }
 
@@ -317,9 +325,12 @@
 
         <div id="topbar">
 
-            <h2 id="roomTitle"></h2>
+            <button id="leaveButton" onclick="leaveRoom()">退出</button>
 
-            <div id="users"></div>
+            <div id="roomInfo">
+                <h2 id="roomTitle"></h2>
+                <div id="users"></div>
+            </div>
 
         </div>
 
@@ -333,16 +344,9 @@
 
         </div>
 
-        <div id="leaveBar">
-
-            <button id="leaveButton" onclick="leaveRoom()">退出</button>
-
-        </div>
-
     </div>
 
     <div id="popupArea"></div>
-
 
     <script src="/socket.io/socket.io.js"></script>
 
