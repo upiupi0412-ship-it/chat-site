@@ -30,7 +30,6 @@
         #title {
             font-size: 42px;
             font-weight: bold;
-            margin-bottom: 10px;
         }
 
         #home input {
@@ -72,11 +71,21 @@
             border-bottom: 1px solid #ddd;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
         #roomTitle {
             margin: 0;
             font-size: 20px;
+        }
+
+        #leaveButton {
+            background: #ff4b4b;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
         #messages {
@@ -160,12 +169,32 @@
             cursor: pointer;
         }
 
-        /* typing animation */
+        /* メニュー */
 
-        .typing {
-            font-style: italic;
-            opacity: 0.7;
+        .msgMenu {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            background: rgba(255,255,255,0.9);
+            padding: 4px 8px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
+
+            .msgMenu div {
+                cursor: pointer;
+                font-size: 13px;
+                padding: 2px 6px;
+                border-radius: 4px;
+            }
+
+                .msgMenu div:hover {
+                    background: #eee;
+                }
     </style>
 
 </head>
@@ -189,7 +218,7 @@
 
             <h2 id="roomTitle"></h2>
 
-            <button onclick="leaveRoom()">退出</button>
+            <button id="leaveButton" onclick="leaveRoom()">退出</button>
 
         </div>
 
@@ -198,7 +227,7 @@
         <div id="inputArea">
 
             <input id="messageInput" placeholder="メッセージ">
-            <button onclick="sendMessage()">送信</button>
+            <button id="sendButton" onclick="sendMessage()">送信</button>
 
         </div>
 
@@ -210,7 +239,8 @@
 
         const socket=io()
 
-        let typingElement=null
+        let currentMenu=null
+        let typingMsg=null
         let typingTimer=null
         let roomName=""
 
@@ -250,7 +280,7 @@
 
         input.value=""
 
-        socket.emit("stopTyping",roomName)
+        socket.emit("stopTyping")
 
         removeTyping()
 
@@ -264,23 +294,23 @@
 
         })
 
-        /* typing検知 */
+        /* typing送信 */
 
         document.getElementById("messageInput").addEventListener("input",()=>{
 
-        socket.emit("typing",roomName)
+        socket.emit("typing")
 
         clearTimeout(typingTimer)
 
         typingTimer=setTimeout(()=>{
 
-        socket.emit("stopTyping",roomName)
+        socket.emit("stopTyping")
 
         },1500)
 
         })
 
-        /* メッセージ表示 */
+        /* メッセージ受信 */
 
         socket.on("chatMessage",(data)=>{
 
@@ -299,6 +329,7 @@
 
         header.textContent=data.user+" "+data.time
         message.textContent=data.text
+        message.dataset.id=data.id
 
         const myName=document.getElementById("name").value
 
@@ -306,6 +337,11 @@
         container.classList.add("mine")
         }else{
         container.classList.add("other")
+        }
+
+        message.onclick=(e)=>{
+        e.stopPropagation()
+        showMenu(message,data.text,data.id,data.user===myName)
         }
 
         container.appendChild(header)
@@ -317,11 +353,23 @@
 
         })
 
+        /* 削除受信 */
+
+        socket.on("messageDeleted",(data)=>{
+
+        const msg=document.querySelector('[data-id="'+data.id+'"]')
+        if(!msg) return
+
+        const container=msg.closest(".msgContainer")
+        if(container) container.remove()
+
+        })
+
         /* typing受信 */
 
-        socket.on("typing",(data)=>{
+        socket.on("typing",()=>{
 
-        showTyping(data.user)
+        showTyping()
 
         })
 
@@ -333,16 +381,14 @@
 
         /* typing表示 */
 
-        function showTyping(user){
+        function showTyping(){
 
-        removeTyping()
+        if(typingMsg) return
 
         const messages=document.getElementById("messages")
 
         const container=document.createElement("div")
-        container.classList.add("msgContainer","other","typing")
-
-        typingElement=container
+        container.classList.add("msgContainer","other")
 
         const message=document.createElement("div")
         message.classList.add("message")
@@ -351,7 +397,9 @@
 
         messages.appendChild(container)
 
-        animateDots(message)
+        typingMsg=message
+
+        animateDots()
 
         messages.scrollTop=messages.scrollHeight
 
@@ -361,34 +409,87 @@
 
         function removeTyping(){
 
-        if(typingElement){
+        if(!typingMsg) return
 
-        typingElement.remove()
-        typingElement=null
-
-        }
+        typingMsg.parentElement.remove()
+        typingMsg=null
 
         }
 
         /* ... animation */
 
-        function animateDots(el){
+        function animateDots(){
 
         let dots=1
 
-        setInterval(()=>{
+        const interval=setInterval(()=>{
 
-        if(!typingElement) return
+        if(!typingMsg){
+        clearInterval(interval)
+        return
+        }
 
-        el.textContent=".".repeat(dots)
+        typingMsg.textContent=".".repeat(dots)
 
         dots++
 
-        if(dots>3) dots=1
+        if(dots>3)dots=1
 
         },400)
 
         }
+
+        /* メニュー */
+
+        function showMenu(messageElement,text,id,isMine){
+
+        if(currentMenu) currentMenu.remove()
+
+        const menu=document.createElement("div")
+        menu.classList.add("msgMenu")
+
+        menu.onclick=(e)=>e.stopPropagation()
+
+        const copy=document.createElement("div")
+        copy.textContent="コピー"
+
+        copy.onclick=()=>{
+        navigator.clipboard.writeText(text)
+        menu.remove()
+        }
+
+        menu.appendChild(copy)
+
+        if(isMine){
+
+        const del=document.createElement("div")
+        del.textContent="削除"
+
+        del.onclick=()=>{
+        socket.emit("deleteMessage",id)
+        menu.remove()
+        }
+
+        menu.appendChild(del)
+
+        }
+
+        messageElement.appendChild(menu)
+
+        currentMenu=menu
+
+        }
+
+        /* メニュー外クリック */
+
+        document.addEventListener("click",()=>{
+
+        if(currentMenu){
+        currentMenu.remove()
+        currentMenu=null
+        }
+
+        })
 
     </script>
 

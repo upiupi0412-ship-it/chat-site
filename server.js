@@ -8,41 +8,22 @@ const io = new Server(server)
 
 app.use(express.static("public"))
 
-/* 部屋データ */
-
 const rooms = {}
-
-/*
-rooms構造
-
-{
- roomName:{
-   users:[{id,name}],
-   messages:[]
- }
-}
-*/
-
-/* 時刻生成 */
 
 function getTime(){
 
 const now = new Date()
 
-let hour = now.getHours()
-let min = now.getMinutes()
+let h = now.getHours()
+let m = now.getMinutes()
 
-if(min < 10) min = "0" + min
+if(m < 10) m = "0" + m
 
-return hour + ":" + min
+return h + ":" + m
 
 }
 
-/* 接続 */
-
 io.on("connection",(socket)=>{
-
-/* 入室 */
 
 socket.on("joinRoom",(data)=>{
 
@@ -51,8 +32,8 @@ const name = data.userName
 
 socket.join(room)
 
-socket.roomName = room
-socket.userName = name
+socket.room = room
+socket.name = name
 
 if(!rooms[room]){
 
@@ -68,25 +49,20 @@ id:socket.id,
 name:name
 })
 
-/* 既存メッセージ送信 */
-
 rooms[room].messages.forEach(msg=>{
 socket.emit("chatMessage",msg)
 })
 
 })
 
-/* メッセージ */
-
 socket.on("chatMessage",(text)=>{
 
-const room = socket.roomName
-
-if(!rooms[room]) return
+const room = socket.room
+if(!room) return
 
 const msg = {
 id: Date.now() + Math.random(),
-user: socket.userName,
+user: socket.name,
 text: text,
 time: getTime()
 }
@@ -97,13 +73,10 @@ io.to(room).emit("chatMessage",msg)
 
 })
 
-/* 削除 */
-
 socket.on("deleteMessage",(id)=>{
 
-const room = socket.roomName
-
-if(!rooms[room]) return
+const room = socket.room
+if(!room) return
 
 rooms[room].messages =
 rooms[room].messages.filter(m=>m.id!==id)
@@ -114,36 +87,31 @@ io.to(room).emit("messageDeleted",{id:id})
 
 /* typing */
 
-socket.on("typing",(room)=>{
+socket.on("typing",()=>{
 
-socket.to(room).emit("typing",{
-user:socket.userName
+socket.to(socket.room).emit("typing",{
+user:socket.name
 })
 
 })
 
-socket.on("stopTyping",(room)=>{
+socket.on("stopTyping",()=>{
 
-socket.to(room).emit("stopTyping",{
-user:socket.userName
-})
+socket.to(socket.room).emit("stopTyping")
 
 })
-
-/* 切断 */
 
 socket.on("disconnect",()=>{
 
-const room = socket.roomName
+const room = socket.room
 if(!room) return
+
 if(!rooms[room]) return
 
 rooms[room].users =
 rooms[room].users.filter(u=>u.id!==socket.id)
 
-/* 誰もいなくなったら履歴削除 */
-
-if(rooms[room].users.length === 0){
+if(rooms[room].users.length===0){
 
 delete rooms[room]
 
@@ -153,12 +121,4 @@ delete rooms[room]
 
 })
 
-/* サーバー起動 */
-
-const PORT = process.env.PORT || 3000
-
-server.listen(PORT,()=>{
-
-console.log("Server running on port",PORT)
-
-})
+server.listen(process.env.PORT || 3000)
