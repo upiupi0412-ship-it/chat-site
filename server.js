@@ -8,172 +8,157 @@ const io = new Server(server)
 
 app.use(express.static("public"))
 
+/* 部屋データ */
+
 const rooms = {}
-const messages = {}
 
-io.on("connection", (socket) => {
+/*
+rooms構造
 
-    socket.on("joinRoom", ({ roomName, userName }) => {
+{
+ roomName:{
+   users:[{id,name}],
+   messages:[]
+ }
+}
+*/
 
-        if (!rooms[roomName]) {
-            rooms[roomName] = { users: [] }
-            messages[roomName] = []
-        }
+/* 時刻生成 */
 
-        const user = {
-            id: socket.id,
-            name: userName
-        }
+function getTime(){
 
-        rooms[roomName].users.push(user)
+const now = new Date()
 
-        socket.join(roomName)
-        socket.roomName = roomName
-        socket.userName = userName
+let hour = now.getHours()
+let min = now.getMinutes()
 
-        io.to(roomName).emit(
-            "userList",
-            rooms[roomName].users.map(u => u.name)
-        )
+if(min < 10) min = "0" + min
 
-        messages[roomName].forEach(m=>{
-            socket.emit("chatMessage",m)
-        })
+return hour + ":" + min
 
-        io.to(roomName).emit("popup", {
-            type: "join",
-            user: userName
-        })
-    })
+}
 
+/* 接続 */
 
-    socket.on("chatMessage", (text) => {
+io.on("connection",(socket)=>{
 
-        const room = socket.roomName
-        if (!room) return
+/* 入室 */
 
-        const now = new Date()
+socket.on("joinRoom",(data)=>{
 
-        // UTC+9補正
-        now.setHours(now.getHours() + 9)
+const room = data.roomName
+const name = data.userName
 
-        const hour = now.getHours()
-        const minute = now.getMinutes().toString().padStart(2,"0")
+socket.join(room)
 
-        const time = `${hour}:${minute}`
+socket.roomName = room
+socket.userName = name
 
-        const msg = {
-            id: Date.now()+"_"+Math.random(),
-            user: socket.userName,
-            text: text,
-            time: time
-        }
+if(!rooms[room]){
 
-        messages[room].push(msg)
+rooms[room] = {
+users:[],
+messages:[]
+}
 
-        io.to(room).emit("chatMessage", msg)
+}
 
-        socket.to(room).emit("stopTyping", {
-            user: socket.userName
-        })
-    })
+rooms[room].users.push({
+id:socket.id,
+name:name
+})
 
+/* 既存メッセージ送信 */
 
-    socket.on("deleteMessage",(id)=>{
-
-        const room = socket.roomName
-        if (!room) return
-
-        const index = messages[room].findIndex(m => m.id === id)
-
-        if (index === -1) return
-
-        const msg = messages[room][index]
-
-        if (msg.user !== socket.userName) return
-
-        messages[room].splice(index,1)
-
-        io.to(room).emit("messageDeleted",{ id })
-
-    })
-
-
-    socket.on("typing", () => {
-
-        const room = socket.roomName
-        if (!room) return
-
-        socket.to(room).emit("typing", {
-            user: socket.userName
-        })
-    })
-
-
-    socket.on("stopTyping", () => {
-
-        const room = socket.roomName
-        if (!room) return
-
-        socket.to(room).emit("stopTyping", {
-            user: socket.userName
-        })
-    })
-
-
-    socket.on("disconnect", () => {
-
-        const room = socket.roomName
-        if (!room) return
-        if (!rooms[room]) return
-
-        rooms[room].users =
-        rooms[room].users.filter(u => u.id !== socket.id)
-
-        io.to(room).emit(
-            "userList",
-            rooms[room].users.map(u => u.name)
-        )
-
-        io.to(room).emit("popup", {
-            type: "leave",
-            user: socket.userName
-        })
-
-        io.to(room).emit("stopTyping", {
-            user: socket.userName
-        })
-
-        if (rooms[room].users.length === 0) {
-
-            delete rooms[room]
-            delete messages[room]
-
-            console.log("room reset:",room)
-
-        }
-
-    })
-
-    socket.on("editMessage",(data)=>{
-
-        const msg = messages.find(m => m.id === data.id)
-        if(!msg) return
-
-        msg.text = data.text
-        msg.edited = true
-
-        io.to(msg.room).emit("messageEdited",{
-        id:data.id,
-        text:data.text
-        })
-
-    })
+rooms[room].messages.forEach(msg=>{
+socket.emit("chatMessage",msg)
+})
 
 })
 
+/* メッセージ */
+
+socket.on("chatMessage",(text)=>{
+
+const room = socket.roomName
+
+if(!rooms[room]) return
+
+const msg = {
+id: Date.now() + Math.random(),
+user: socket.userName,
+text: text,
+time: getTime()
+}
+
+rooms[room].messages.push(msg)
+
+io.to(room).emit("chatMessage",msg)
+
+})
+
+/* 削除 */
+
+socket.on("deleteMessage",(id)=>{
+
+const room = socket.roomName
+
+if(!rooms[room]) return
+
+rooms[room].messages =
+rooms[room].messages.filter(m=>m.id!==id)
+
+io.to(room).emit("messageDeleted",{id:id})
+
+})
+
+/* typing */
+
+socket.on("typing",(room)=>{
+
+socket.to(room).emit("typing",{
+user:socket.userName
+})
+
+})
+
+socket.on("stopTyping",(room)=>{
+
+socket.to(room).emit("stopTyping",{
+user:socket.userName
+})
+
+})
+
+/* 切断 */
+
+socket.on("disconnect",()=>{
+
+const room = socket.roomName
+if(!room) return
+if(!rooms[room]) return
+
+rooms[room].users =
+rooms[room].users.filter(u=>u.id!==socket.id)
+
+/* 誰もいなくなったら履歴削除 */
+
+if(rooms[room].users.length === 0){
+
+delete rooms[room]
+
+}
+
+})
+
+})
+
+/* サーバー起動 */
+
 const PORT = process.env.PORT || 3000
 
-server.listen(PORT, () => {
-    console.log("server started")
+server.listen(PORT,()=>{
+
+console.log("Server running on port",PORT)
+
 })
