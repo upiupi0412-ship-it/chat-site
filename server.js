@@ -35,7 +35,12 @@ io.on("connection",(socket)=>{
             id: Date.now().toString(),
             user: user.name,
             text: text,
-            time: new Date().toLocaleTimeString()
+            time: new Date().toLocaleTimeString("ja-JP", {
+                timeZone: "Asia/Tokyo",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false
+            })
         }
 
         io.to(user.room).emit("chatMessage",msg)
