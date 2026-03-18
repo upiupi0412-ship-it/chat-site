@@ -279,7 +279,6 @@
 
         input.value=""
 
-        /* ←これ超重要 */
         socket.emit("stopTyping")
 
         removeTyping()
@@ -298,6 +297,9 @@
 
         document.getElementById("messageInput").addEventListener("input",()=>{
 
+        /* 自分にも表示 */
+        showTyping(true)
+
         socket.emit("typing")
 
         clearTimeout(typingTimer)
@@ -305,6 +307,7 @@
         typingTimer=setTimeout(()=>{
 
         socket.emit("stopTyping")
+        removeTyping()
 
         },1200)
 
@@ -380,15 +383,21 @@
         })
 
         /* typing表示 */
-
-        function showTyping(){
+        function showTyping(isMine=false){
 
         if(typingMsg) return
 
         const messages=document.getElementById("messages")
 
         const container=document.createElement("div")
-        container.classList.add("msgContainer","other")
+        container.classList.add("msgContainer")
+
+        /* 自分か相手か */
+        if(isMine){
+        container.classList.add("mine")
+        }else{
+        container.classList.add("other")
+        }
 
         const message=document.createElement("div")
         message.classList.add("message")
