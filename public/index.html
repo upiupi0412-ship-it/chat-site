@@ -249,20 +249,7 @@
     </div>
 
     <!-- 掲示板 -->
-    <div id="board" style="
-        position:fixed;
-        top:0;
-        left:0;
-        width:100%;
-        height:100%;
-        background:white;
-        transform:translateX(100%);
-        transition:0.3s;
-        z-index:9999;
-        display:flex;
-        flex-direction:column;
-        padding:15px;
-    ">
+    <div id="board">
 
         <h2>掲示板（今日）</h2>
 
@@ -474,12 +461,12 @@
         /* ===== 掲示板 ===== */
 
         function openBoard(){
-        document.getElementById("board").style.transform="translateX(0)"
-        socket.emit("getBoard")
+            document.getElementById("board").classList.add("open")
+            socket.emit("getBoard")
         }
 
         function closeBoard(){
-        document.getElementById("board").style.transform="translateX(100%)"
+            document.getElementById("board").classList.remove("open")
         }
 
         function sendBoard(){
