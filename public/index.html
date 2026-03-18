@@ -242,20 +242,19 @@
         let currentMenu=null
         let typingMsg=null
         let typingTimer=null
-        let roomName=""
 
         /* 入室 */
 
         function joinRoom(){
 
         const name=document.getElementById("name").value
-        roomName=document.getElementById("room").value
+        const room=document.getElementById("room").value
 
-        if(!name||!roomName)return
+        if(!name||!room)return
 
-        socket.emit("joinRoom",{roomName:roomName,userName:name})
+        socket.emit("joinRoom",{roomName:room,userName:name})
 
-        document.getElementById("roomTitle").textContent=roomName
+        document.getElementById("roomTitle").textContent=room
         document.getElementById("chat").classList.add("open")
 
         }
@@ -280,6 +279,7 @@
 
         input.value=""
 
+        /* ←これ超重要 */
         socket.emit("stopTyping")
 
         removeTyping()
@@ -306,7 +306,7 @@
 
         socket.emit("stopTyping")
 
-        },1500)
+        },1200)
 
         })
 
@@ -353,7 +353,7 @@
 
         })
 
-        /* 削除受信 */
+        /* 削除 */
 
         socket.on("messageDeleted",(data)=>{
 

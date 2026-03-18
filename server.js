@@ -89,6 +89,8 @@ io.to(room).emit("messageDeleted",{id:id})
 
 socket.on("typing",()=>{
 
+if(!socket.room) return
+
 socket.to(socket.room).emit("typing",{
 user:socket.name
 })
@@ -96,6 +98,8 @@ user:socket.name
 })
 
 socket.on("stopTyping",()=>{
+
+if(!socket.room) return
 
 socket.to(socket.room).emit("stopTyping")
 
