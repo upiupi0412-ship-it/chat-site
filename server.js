@@ -8,74 +8,75 @@ const io = new Server(server)
 
 app.use(express.static("public"))
 
-let users = {}
-let messages = []
+let users = {} // socket.id → {name, room}
 
+/* 接続 */
 io.on("connection",(socket)=>{
 
-    socket.on("joinRoom",({userName,roomName})=>{
+    /* 入室 */
+    socket.on("joinRoom",({roomName,userName})=>{
+
         socket.join(roomName)
 
-        users[socket.id]={name:userName,room:roomName}
+        users[socket.id]={
+            name:userName,
+            room:roomName
+        }
 
-        const list = Object.values(users)
-            .filter(u=>u.room===roomName)
-            .map(u=>u.name)
-
-        io.to(roomName).emit("userList",list)
     })
 
+    /* メッセージ送信 */
     socket.on("chatMessage",(text)=>{
-        const user = users[socket.id]
+
+        const user=users[socket.id]
         if(!user) return
 
         const msg={
             id: Date.now().toString(),
-            user:user.name,
-            text,
-            time:new Date().toLocaleTimeString()
+            user: user.name,
+            text: text,
+            time: new Date().toLocaleTimeString()
         }
-
-        messages.push(msg)
 
         io.to(user.room).emit("chatMessage",msg)
+
     })
 
+    /* メッセージ削除 */
     socket.on("deleteMessage",(id)=>{
-        const user = users[socket.id]
+
+        const user=users[socket.id]
         if(!user) return
 
-        messages = messages.filter(m=>m.id!==id)
-
         io.to(user.room).emit("messageDeleted",{id})
+
     })
 
+    /* typing */
     socket.on("typing",()=>{
-        const user = users[socket.id]
-        if(user){
-            socket.to(user.room).emit("typing")
-        }
+
+        const user=users[socket.id]
+        if(!user) return
+
+        socket.to(user.room).emit("typing")
+
     })
 
+    /* stopTyping */
     socket.on("stopTyping",()=>{
-        const user = users[socket.id]
-        if(user){
-            socket.to(user.room).emit("stopTyping")
-        }
+
+        const user=users[socket.id]
+        if(!user) return
+
+        socket.to(user.room).emit("stopTyping")
+
     })
 
+    /* 切断 */
     socket.on("disconnect",()=>{
-        const user = users[socket.id]
-        if(user){
-            const room = user.room
-            delete users[socket.id]
 
-            const list = Object.values(users)
-                .filter(u=>u.room===room)
-                .map(u=>u.name)
+        delete users[socket.id]
 
-            io.to(room).emit("userList",list)
-        }
     })
 
 })

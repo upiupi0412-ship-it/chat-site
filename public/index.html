@@ -1,352 +1,497 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
+
 <head>
+
 <meta charset="UTF-8">
+<meta name="robots" content="noindex">
 <title>Chat Web</title>
 
-<script src="/socket.io/socket.io.js"></script>
-
 <style>
+
 body{
-    margin:0;
-    font-family:sans-serif;
-    background:#ffffff;
+margin:0;
+font-family:sans-serif;
+background:#f5f5f5;
+overflow-x:hidden;
 }
 
-/* ===== 初期画面 ===== */
-#start{
-    position:absolute;
-    width:100%;
-    height:100%;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
+#home{
+position:absolute;
+width:100%;
+height:100%;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:20px;
 }
 
-input{
-    padding:10px;
-    margin:5px;
-    border:1px solid #ccc;
-    border-radius:5px;
+#title{
+font-size:42px;
+font-weight:bold;
 }
 
-/* ===== チャット ===== */
+#home input{
+width:320px;
+padding:15px;
+font-size:18px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+#home button{
+width:320px;
+padding:16px;
+font-size:20px;
+border:none;
+border-radius:8px;
+background:#4CAF50;
+color:white;
+cursor:pointer;
+}
+
 #chat{
-    display:none;
-    height:100vh;
-    display:flex;
-    flex-direction:column;
+position:absolute;
+width:100%;
+height:100%;
+background:white;
+transform:translateX(100%);
+transition:0.4s;
+display:flex;
+flex-direction:column;
 }
 
-/* 上バー */
-#topBar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px;
-    border-bottom:1px solid #ddd;
-    background:#fff;
+#chat.open{
+transform:translateX(0);
 }
 
-#topLeft{
-    display:flex;
-    flex-direction:column;
+#topbar{
+padding:15px;
+border-bottom:1px solid #ddd;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
-#topRight{
-    display:flex;
-    gap:10px;
-}
-
-button{
-    padding:6px 10px;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
-}
-
-#sendButton{
-    background:#2196f3;
-    color:white;
+#roomTitle{
+margin:0;
+font-size:20px;
 }
 
 #leaveButton{
-    background:#f44336;
-    color:white;
+background:#ff4b4b;
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:6px;
+cursor:pointer;
 }
 
-/* メッセージ */
 #messages{
-    flex:1;
-    overflow-y:auto;
-    padding:10px;
-    background:#fafafa;
+flex:1;
+overflow-y:auto;
+padding:15px;
+display:flex;
+flex-direction:column;
 }
 
 .msgContainer{
-    margin:15px 0;
-    display:flex;
+position:relative;
+display:flex;
+flex-direction:column;
+max-width:60%;
+margin-bottom:22px;
 }
 
 .mine{
-    justify-content:flex-end;
+align-self:flex-end;
 }
 
 .other{
-    justify-content:flex-start;
+align-self:flex-start;
 }
 
 .message{
-    max-width:60%;
-    padding:10px;
-    border-radius:8px;
-    background:#e3f2fd;
-    position:relative;
+padding:10px 14px;
+border-radius:15px;
+font-size:16px;
+word-break:break-word;
+cursor:pointer;
+}
+
+.mine .message{
+background:#9fe8a9;
 }
 
 .other .message{
-    background:#fff;
-    border:1px solid #ddd;
+background:#eee;
 }
 
-/* 名前と時間 */
 .msgHeader{
-    font-size:11px;
-    color:#888;
-    margin-bottom:3px;
+font-size:12px;
+color:#888;
+position:absolute;
+top:-16px;
+white-space:nowrap;
 }
 
-/* 入力欄 */
+.mine .msgHeader{
+right:10px;
+}
+
+.other .msgHeader{
+left:10px;
+}
+
 #inputArea{
-    display:flex;
-    padding:10px;
-    border-top:1px solid #ddd;
-    background:#fff;
+display:flex;
+padding:10px;
+border-top:1px solid #ddd;
+gap:10px;
 }
 
 #messageInput{
-    flex:1;
-    padding:10px;
-    border:1px solid #ccc;
-    border-radius:5px;
+flex:1;
+padding:14px;
+font-size:16px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+#sendButton{
+padding:14px 20px;
+font-size:16px;
+border:none;
+border-radius:8px;
+background:#4CAF50;
+color:white;
+cursor:pointer;
 }
 
 /* メニュー */
-.menu{
-    position:absolute;
-    bottom:-30px;
-    right:0;
-    display:flex;
-    gap:10px;
-    background:white;
-    padding:5px 10px;
-    border-radius:5px;
-    border:1px solid #ccc;
+
+.msgMenu{
+position:absolute;
+right:5px;
+top:50%;
+transform:translateY(-50%);
+display:flex;
+flex-direction:row;
+gap:8px;
+background:rgba(255,255,255,0.9);
+padding:4px 8px;
+border-radius:8px;
+box-shadow:0 1px 4px rgba(0,0,0,0.2);
 }
 
-.menu span{
-    cursor:pointer;
+.msgMenu div{
+cursor:pointer;
+font-size:13px;
+padding:2px 6px;
+border-radius:4px;
 }
+
+.msgMenu div:hover{
+background:#eee;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<!-- 初期画面 -->
-<div id="start">
-    <h1>Chat Web</h1>
-    <input id="name" placeholder="名前">
-    <input id="room" placeholder="部屋名">
-    <button onclick="join()">入る</button>
+<div id="home">
+
+<div id="title">Chat Web</div>
+
+<input id="name" placeholder="名前">
+<input id="room" placeholder="部屋名">
+
+<button onclick="joinRoom()">入る</button>
+
 </div>
 
-<!-- チャット -->
 <div id="chat">
 
-    <div id="topBar">
-        <div id="topLeft">
-            <div id="roomName"></div>
-            <div id="userList"></div>
-        </div>
+<div id="topbar">
 
-        <div id="topRight">
-            <button id="leaveButton" onclick="leaveRoom()">退出</button>
-        </div>
-    </div>
+<h2 id="roomTitle"></h2>
 
-    <div id="messages"></div>
-
-    <div id="inputArea">
-        <input id="messageInput">
-        <button id="sendButton" onclick="sendMessage()">投稿</button>
-    </div>
+<button id="leaveButton" onclick="leaveRoom()">退出</button>
 
 </div>
 
-<script>
-const socket = io()
+<div id="messages"></div>
 
-let myName=""
+<div id="inputArea">
+
+<input id="messageInput" placeholder="メッセージ">
+<button id="sendButton" onclick="sendMessage()">送信</button>
+
+</div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+
+const socket=io()
+
 let currentMenu=null
 let typingMsg=null
 let typingTimer=null
-let typingInterval=null
+let roomName=""
 
-function join(){
-    myName=document.getElementById("name").value
-    const room=document.getElementById("room").value
+/* 入室 */
 
-    if(!myName||!room) return
+function joinRoom(){
 
-    socket.emit("joinRoom",{userName:myName,roomName:room})
+const name=document.getElementById("name").value
+roomName=document.getElementById("room").value
 
-    document.getElementById("start").style.display="none"
-    document.getElementById("chat").style.display="flex"
+if(!name||!roomName)return
 
-    document.getElementById("roomName").textContent=room
-}
+socket.emit("joinRoom",{roomName:roomName,userName:name})
 
-/* メッセージ */
-function sendMessage(){
-    const input=document.getElementById("messageInput")
-    const text=input.value
-    if(!text) return
+document.getElementById("roomTitle").textContent=roomName
+document.getElementById("chat").classList.add("open")
 
-    socket.emit("chatMessage",text)
-    input.value=""
-
-    socket.emit("stopTyping")
-    removeTyping()
-}
-
-socket.on("chatMessage",(msg)=>{
-    removeTyping()
-    addMessage(msg)
-})
-
-function addMessage(msg){
-    const container=document.createElement("div")
-    container.classList.add("msgContainer")
-    container.dataset.id=msg.id
-
-    container.classList.add(msg.user===myName?"mine":"other")
-
-    const message=document.createElement("div")
-    message.classList.add("message")
-
-    const header=document.createElement("div")
-    header.classList.add("msgHeader")
-    header.textContent=msg.user+" "+msg.time
-
-    message.appendChild(header)
-    message.appendChild(document.createTextNode(msg.text))
-
-    message.onclick=(e)=>{
-        e.stopPropagation()
-        openMenu(message,msg)
-    }
-
-    container.appendChild(message)
-    document.getElementById("messages").appendChild(container)
-}
-
-/* メニュー */
-function openMenu(el,msg){
-    closeMenu()
-
-    const menu=document.createElement("div")
-    menu.classList.add("menu")
-
-    const copy=document.createElement("span")
-    copy.textContent="コピー"
-    copy.onclick=()=>navigator.clipboard.writeText(msg.text)
-
-    menu.appendChild(copy)
-
-    if(msg.user===myName){
-        const del=document.createElement("span")
-        del.textContent="削除"
-        del.onclick=()=>socket.emit("deleteMessage",msg.id)
-        menu.appendChild(del)
-    }
-
-    el.appendChild(menu)
-    currentMenu=menu
-}
-
-function closeMenu(){
-    if(currentMenu){
-        currentMenu.remove()
-        currentMenu=null
-    }
-}
-
-document.body.onclick=closeMenu
-
-socket.on("messageDeleted",(data)=>{
-    document.querySelectorAll(".msgContainer").forEach(c=>{
-        if(c.dataset.id===data.id) c.remove()
-    })
-})
-
-/* typing */
-document.getElementById("messageInput").addEventListener("input",()=>{
-    showTyping(true)
-    socket.emit("typing")
-
-    clearTimeout(typingTimer)
-    typingTimer=setTimeout(()=>{
-        socket.emit("stopTyping")
-        removeTyping()
-    },1200)
-})
-
-socket.on("typing",()=>showTyping(false))
-socket.on("stopTyping",()=>removeTyping())
-
-function showTyping(isMine){
-    if(typingMsg) return
-
-    const container=document.createElement("div")
-    container.classList.add("msgContainer")
-    container.classList.add(isMine?"mine":"other")
-
-    const msg=document.createElement("div")
-    msg.classList.add("message")
-
-    container.appendChild(msg)
-    document.getElementById("messages").appendChild(container)
-
-    typingMsg=msg
-
-    let dots=0
-    typingInterval=setInterval(()=>{
-        if(!typingMsg) return
-        dots=(dots+1)%4
-        typingMsg.textContent=".".repeat(dots)
-    },500)
-}
-
-function removeTyping(){
-    if(typingMsg){
-        typingMsg.parentElement.remove()
-        typingMsg=null
-    }
-    if(typingInterval){
-        clearInterval(typingInterval)
-        typingInterval=null
-    }
 }
 
 /* 退出 */
+
 function leaveRoom(){
-    location.reload()
+socket.disconnect()
+location.reload()
 }
 
-socket.on("userList",(list)=>{
-    document.getElementById("userList").textContent=list.join(", ")
+/* 送信 */
+
+function sendMessage(){
+
+const input=document.getElementById("messageInput")
+const text=input.value
+
+if(text==="")return
+
+socket.emit("chatMessage",text)
+
+input.value=""
+
+socket.emit("stopTyping")
+
+removeTyping()
+
+}
+
+/* Enter送信 */
+
+document.getElementById("messageInput").addEventListener("keydown",(e)=>{
+
+if(e.key==="Enter") sendMessage()
+
 })
+
+/* typing送信 */
+
+document.getElementById("messageInput").addEventListener("input",()=>{
+
+socket.emit("typing")
+
+clearTimeout(typingTimer)
+
+typingTimer=setTimeout(()=>{
+
+socket.emit("stopTyping")
+
+},1500)
+
+})
+
+/* メッセージ受信 */
+
+socket.on("chatMessage",(data)=>{
+
+removeTyping()
+
+const messages=document.getElementById("messages")
+
+const container=document.createElement("div")
+container.classList.add("msgContainer")
+
+const header=document.createElement("div")
+header.classList.add("msgHeader")
+
+const message=document.createElement("div")
+message.classList.add("message")
+
+header.textContent=data.user+" "+data.time
+message.textContent=data.text
+message.dataset.id=data.id
+
+const myName=document.getElementById("name").value
+
+if(data.user===myName){
+container.classList.add("mine")
+}else{
+container.classList.add("other")
+}
+
+message.onclick=(e)=>{
+e.stopPropagation()
+showMenu(message,data.text,data.id,data.user===myName)
+}
+
+container.appendChild(header)
+container.appendChild(message)
+
+messages.appendChild(container)
+
+messages.scrollTop=messages.scrollHeight
+
+})
+
+/* 削除受信 */
+
+socket.on("messageDeleted",(data)=>{
+
+const msg=document.querySelector('[data-id="'+data.id+'"]')
+if(!msg) return
+
+const container=msg.closest(".msgContainer")
+if(container) container.remove()
+
+})
+
+/* typing受信 */
+
+socket.on("typing",()=>{
+
+showTyping()
+
+})
+
+socket.on("stopTyping",()=>{
+
+removeTyping()
+
+})
+
+/* typing表示 */
+
+function showTyping(){
+
+if(typingMsg) return
+
+const messages=document.getElementById("messages")
+
+const container=document.createElement("div")
+container.classList.add("msgContainer","other")
+
+const message=document.createElement("div")
+message.classList.add("message")
+
+container.appendChild(message)
+
+messages.appendChild(container)
+
+typingMsg=message
+
+animateDots()
+
+messages.scrollTop=messages.scrollHeight
+
+}
+
+/* typing削除 */
+
+function removeTyping(){
+
+if(!typingMsg) return
+
+typingMsg.parentElement.remove()
+typingMsg=null
+
+}
+
+/* ... animation */
+
+function animateDots(){
+
+let dots=1
+
+const interval=setInterval(()=>{
+
+if(!typingMsg){
+clearInterval(interval)
+return
+}
+
+typingMsg.textContent=".".repeat(dots)
+
+dots++
+
+if(dots>3)dots=1
+
+},400)
+
+}
+
+/* メニュー */
+
+function showMenu(messageElement,text,id,isMine){
+
+if(currentMenu) currentMenu.remove()
+
+const menu=document.createElement("div")
+menu.classList.add("msgMenu")
+
+menu.onclick=(e)=>e.stopPropagation()
+
+const copy=document.createElement("div")
+copy.textContent="コピー"
+
+copy.onclick=()=>{
+navigator.clipboard.writeText(text)
+menu.remove()
+}
+
+menu.appendChild(copy)
+
+if(isMine){
+
+const del=document.createElement("div")
+del.textContent="削除"
+
+del.onclick=()=>{
+socket.emit("deleteMessage",id)
+menu.remove()
+}
+
+menu.appendChild(del)
+
+}
+
+messageElement.appendChild(menu)
+
+currentMenu=menu
+
+}
+
+/* メニュー外クリック */
+
+document.addEventListener("click",()=>{
+
+if(currentMenu){
+currentMenu.remove()
+currentMenu=null
+}
+
+})
+
 </script>
 
 </body>
