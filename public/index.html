@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Chat Web</title>
-<h1 style="color:red;">VERSION 2</h1>
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -11,7 +10,7 @@
 body{
     margin:0;
     font-family:sans-serif;
-    overflow:hidden;
+    background:#ffffff;
 }
 
 /* ===== 初期画面 ===== */
@@ -23,27 +22,21 @@ body{
     flex-direction:column;
     justify-content:center;
     align-items:center;
-    background:#f5f5f5;
 }
 
 input{
     padding:10px;
     margin:5px;
+    border:1px solid #ccc;
+    border-radius:5px;
 }
 
 /* ===== チャット ===== */
 #chat{
-    position:absolute;
-    width:100%;
-    height:100%;
+    display:none;
+    height:100vh;
     display:flex;
     flex-direction:column;
-    background:#e5ddd5;
-    transform:translateX(100%);
-    transition:.3s;
-}
-#chat.show{
-    transform:translateX(0);
 }
 
 /* 上バー */
@@ -51,9 +44,9 @@ input{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    background:#075e54;
-    color:white;
     padding:10px;
+    border-bottom:1px solid #ddd;
+    background:#fff;
 }
 
 #topLeft{
@@ -73,9 +66,13 @@ button{
     cursor:pointer;
 }
 
-/* ボタン色 */
+#sendButton{
+    background:#2196f3;
+    color:white;
+}
+
 #leaveButton{
-    background:#e57373;
+    background:#f44336;
     color:white;
 }
 
@@ -84,11 +81,11 @@ button{
     flex:1;
     overflow-y:auto;
     padding:10px;
+    background:#fafafa;
 }
 
 .msgContainer{
-    position:relative;
-    margin:20px 0;
+    margin:15px 0;
     display:flex;
 }
 
@@ -103,49 +100,36 @@ button{
 .message{
     max-width:60%;
     padding:10px;
-    border-radius:10px;
-    background:#dcf8c6;
+    border-radius:8px;
+    background:#e3f2fd;
     position:relative;
-    word-break:break-word;
 }
 
 .other .message{
-    background:white;
+    background:#fff;
+    border:1px solid #ddd;
 }
 
 /* 名前と時間 */
 .msgHeader{
-    font-size:12px;
+    font-size:11px;
     color:#888;
-    position:absolute;
-    top:-16px;
-    white-space:nowrap;
+    margin-bottom:3px;
 }
 
-.mine .msgHeader{
-    right:10px;
-}
-
-.other .msgHeader{
-    left:10px;
-}
-
-/* 入力 */
+/* 入力欄 */
 #inputArea{
     display:flex;
     padding:10px;
-    background:#eee;
+    border-top:1px solid #ddd;
+    background:#fff;
 }
 
 #messageInput{
     flex:1;
     padding:10px;
-}
-
-#sendButton{
-    background:#4caf50;
-    color:white;
-    margin-left:5px;
+    border:1px solid #ccc;
+    border-radius:5px;
 }
 
 /* メニュー */
@@ -158,7 +142,7 @@ button{
     background:white;
     padding:5px 10px;
     border-radius:5px;
-    box-shadow:0 2px 5px rgba(0,0,0,0.2);
+    border:1px solid #ccc;
 }
 
 .menu span{
@@ -209,7 +193,6 @@ let typingMsg=null
 let typingTimer=null
 let typingInterval=null
 
-/* ===== 入室 ===== */
 function join(){
     myName=document.getElementById("name").value
     const room=document.getElementById("room").value
@@ -219,11 +202,12 @@ function join(){
     socket.emit("joinRoom",{userName:myName,roomName:room})
 
     document.getElementById("start").style.display="none"
-    document.getElementById("chat").classList.add("show")
+    document.getElementById("chat").style.display="flex"
+
     document.getElementById("roomName").textContent=room
 }
 
-/* ===== メッセージ ===== */
+/* メッセージ */
 function sendMessage(){
     const input=document.getElementById("messageInput")
     const text=input.value
@@ -246,11 +230,7 @@ function addMessage(msg){
     container.classList.add("msgContainer")
     container.dataset.id=msg.id
 
-    if(msg.user===myName){
-        container.classList.add("mine")
-    }else{
-        container.classList.add("other")
-    }
+    container.classList.add(msg.user===myName?"mine":"other")
 
     const message=document.createElement("div")
     message.classList.add("message")
@@ -271,7 +251,7 @@ function addMessage(msg){
     document.getElementById("messages").appendChild(container)
 }
 
-/* ===== メニュー ===== */
+/* メニュー */
 function openMenu(el,msg){
     closeMenu()
 
@@ -310,7 +290,7 @@ socket.on("messageDeleted",(data)=>{
     })
 })
 
-/* ===== typing ===== */
+/* typing */
 document.getElementById("messageInput").addEventListener("input",()=>{
     showTyping(true)
     socket.emit("typing")
@@ -359,12 +339,11 @@ function removeTyping(){
     }
 }
 
-/* ===== 退出 ===== */
+/* 退出 */
 function leaveRoom(){
     location.reload()
 }
 
-/* ===== ユーザー一覧 ===== */
 socket.on("userList",(list)=>{
     document.getElementById("userList").textContent=list.join(", ")
 })
