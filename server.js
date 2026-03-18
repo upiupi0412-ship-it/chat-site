@@ -79,6 +79,26 @@ io.on("connection",(socket)=>{
         io.to(room).emit("userList",list)
     })
 
+    socket.on("editMessage",({id,text})=>{
+
+        const user = users[socket.id]
+        if(!user) return
+    
+        const msg = messages.find(m=>m.id===id)
+        if(!msg) return
+    
+        if(msg.user !== user.name) return
+    
+        msg.text = text
+        msg.edited = true
+    
+        io.to(user.room).emit("messageEdited",{
+            id,
+            text
+        })
+    
+    })
+
 })
 
 server.listen(3000,()=>{
