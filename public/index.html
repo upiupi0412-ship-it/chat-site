@@ -234,8 +234,8 @@
             </div>
 
             <div id="topRight">
-                <button id="boardButton" onclick="openBoard()">掲示板</button>
-                <button id="leaveButton" onclick="leaveRoom()">退出</button>
+                <button onclick="openBoard()">掲示板</button>
+                <button onclick="leaveRoom()">退出</button>
             </div>
         </div>
 
@@ -249,11 +249,24 @@
     </div>
 
     <!-- 掲示板 -->
-    <div id="board">
+    <div id="board" style="
+        position:fixed;
+        top:0;
+        left:0;
+        width:100%;
+        height:100%;
+        background:white;
+        transform:translateX(100%);
+        transition:0.3s;
+        z-index:9999;
+        display:flex;
+        flex-direction:column;
+        padding:15px;
+    ">
 
         <h2>掲示板（今日）</h2>
 
-        <div id="boardMessages"></div>
+        <div id="boardMessages" style="flex:1;overflow:auto;"></div>
 
         <div>
             <input id="boardInput">
@@ -271,6 +284,7 @@
         let currentMenu=null
         let typingMsg=null
         let typingTimer=null
+        let typingInterval=null
 
         /* ===== 入室 ===== */
 
@@ -309,17 +323,15 @@
         }
 
         socket.on("chatMessage",(msg)=>{
-
         removeTyping()
-
         addMessage(msg)
-
         })
 
         function addMessage(msg){
 
         const container=document.createElement("div")
         container.classList.add("msgContainer")
+        container.dataset.id = msg.id   // ←重要
 
         if(msg.user===myName){
         container.classList.add("mine")
@@ -337,7 +349,6 @@
         message.appendChild(header)
         message.appendChild(document.createTextNode(msg.text))
 
-        /* メニュー */
         message.onclick=(e)=>{
         e.stopPropagation()
         openMenu(message,msg)
@@ -389,9 +400,9 @@
         document.body.onclick=closeMenu
 
         socket.on("messageDeleted",(data)=>{
-        document.querySelectorAll(".message").forEach(m=>{
-        if(m.textContent.includes(data.id)){
-        m.parentElement.remove()
+        document.querySelectorAll(".msgContainer").forEach(c=>{
+        if(c.dataset.id===data.id){
+        c.remove()
         }
         })
         })
@@ -437,15 +448,8 @@
 
         typingMsg=msg
 
-        animateDots()
-
-        }
-
-        function animateDots(){
-
         let dots=0
-
-        setInterval(()=>{
+        typingInterval=setInterval(()=>{
         if(!typingMsg) return
         dots=(dots+1)%4
         typingMsg.textContent=".".repeat(dots)
@@ -460,17 +464,22 @@
         typingMsg=null
         }
 
+        if(typingInterval){
+        clearInterval(typingInterval)
+        typingInterval=null
+        }
+
         }
 
         /* ===== 掲示板 ===== */
 
         function openBoard(){
-        document.getElementById("board").classList.add("open")
+        document.getElementById("board").style.transform="translateX(0)"
         socket.emit("getBoard")
         }
 
         function closeBoard(){
-        document.getElementById("board").classList.remove("open")
+        document.getElementById("board").style.transform="translateX(100%)"
         }
 
         function sendBoard(){
@@ -493,14 +502,16 @@
         data.forEach(msg=>{
 
         const div=document.createElement("div")
-        div.classList.add("boardMsg")
+        div.style.padding="8px"
+        div.style.borderBottom="1px solid #ddd"
 
-        div.textContent=msg.user+" "+msg.time+" : "+msg.text
+        div.textContent = msg.user+" "+msg.time+" : "+msg.text
 
         if(msg.user===myName){
         const del=document.createElement("span")
-        del.textContent="削除"
-        del.classList.add("boardDelete")
+        del.textContent=" 削除"
+        del.style.color="red"
+        del.style.cursor="pointer"
         del.onclick=()=>{
         socket.emit("deleteBoard",msg.id)
         }
