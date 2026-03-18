@@ -23,6 +23,12 @@ io.on("connection",(socket)=>{
             room:roomName
         }
 
+        const list = Object.values(users)
+            .filter(u => u.room === roomName)
+            .map(u => u.name)
+
+        io.to(roomName).emit("userList", list)
+
     })
 
     /* メッセージ送信 */
@@ -80,10 +86,24 @@ io.on("connection",(socket)=>{
     /* 切断 */
     socket.on("disconnect",()=>{
 
+        const user = users[socket.id]
+        if(!user) return
+    
+        const room = user.room
         delete users[socket.id]
-
+    
+        const list = Object.values(users)
+            .filter(u => u.room === room)
+            .map(u => u.name)
+    
+        io.to(room).emit("userList", list)
+    
     })
 
+    socket.on("userList",(list)=>{
+        document.getElementById("userList").textContent = list.join(", ")
+    })
+    
 })
 
 server.listen(3000,()=>{
