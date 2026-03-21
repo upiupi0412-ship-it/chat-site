@@ -225,251 +225,275 @@ cursor:pointer;
 
 <script>
 
-const socket=io()
-
-let currentMenu=null
-let typingMsg=null
-let typingTimer=null
-let roomName=""
-let editingId=null
-
-/* 入室 */
-
-function joinRoom(){
-const name=document.getElementById("name").value
-roomName=document.getElementById("room").value
-if(!name||!roomName)return
-
-socket.emit("joinRoom",{roomName,userName:name})
-
-document.getElementById("roomTitle").textContent=roomName
-document.getElementById("chat").classList.add("open")
-}
-
-/* 退出 */
-
-function leaveRoom(){
-socket.disconnect()
-location.reload()
-}
-
-/* 送信（編集対応） */
-
-function sendMessage(){
-
-const input=document.getElementById("messageInput")
-const text=input.value
-if(text==="") return
-
-if(editingId){
-socket.emit("editMessage",{id:editingId,text})
-editingId=null
-document.getElementById("sendButton").textContent="送信"
-}else{
-socket.emit("chatMessage",text)
-}
-
-input.value=""
-
-socket.emit("stopTyping")
-removeTyping()
-}
-
-/* Enter */
-
-document.getElementById("messageInput").addEventListener("keydown",(e)=>{
-if(e.key==="Enter") sendMessage()
-})
-
-/* typing */
-
-document.getElementById("messageInput").addEventListener("input",()=>{
-socket.emit("typing")
-
-clearTimeout(typingTimer)
-typingTimer=setTimeout(()=>{
-socket.emit("stopTyping")
-},1500)
-
-showTyping(true)
-})
-
-/* ユーザー一覧 */
-
-socket.on("userList",(list)=>{
-document.getElementById("userList").textContent="参加者: "+list.join(", ")
-})
-
-/* メッセージ受信 */
-
-socket.on("chatMessage",(data)=>{
-
-removeTyping()
-
-const messages=document.getElementById("messages")
-
-const container=document.createElement("div")
-container.classList.add("msgContainer")
-
-const header=document.createElement("div")
-header.classList.add("msgHeader")
-header.textContent=data.user+" "+data.time
-
-const message=document.createElement("div")
-message.classList.add("message")
-message.textContent=data.text
-message.dataset.id=data.id
-
-const myName=document.getElementById("name").value
-
-if(data.user===myName){
-container.classList.add("mine")
-}else{
-container.classList.add("other")
-}
-
-message.onclick=(e)=>{
-e.stopPropagation()
-showMenu(message,data.text,data.id,data.user===myName)
-}
-
-container.appendChild(header)
-container.appendChild(message)
-
-messages.appendChild(container)
-messages.scrollTop=messages.scrollHeight
-})
-
-/* 編集反映 */
-
-socket.on("messageEdited",(data)=>{
-const msg=document.querySelector('[data-id="'+data.id+'"]')
-if(!msg) return
-
-msg.textContent=data.text
-
-const header=msg.parentElement.querySelector(".msgHeader")
-if(!header.textContent.includes("(編集済み)")){
-header.textContent+=" (編集済み)"
-}
-})
-
-/* 削除 */
-
-socket.on("messageDeleted",(data)=>{
-const msg=document.querySelector('[data-id="'+data.id+'"]')
-if(msg) msg.closest(".msgContainer").remove()
-})
-
-/* typing */
-
-socket.on("typing",()=> showTyping(false))
-socket.on("stopTyping",()=> removeTyping())
-
-function showTyping(isMine=false){
-if(typingMsg) return
-
-const messages=document.getElementById("messages")
-const container=document.createElement("div")
-container.classList.add("msgContainer", isMine?"mine":"other")
-
-const message=document.createElement("div")
-message.classList.add("message")
-
-container.appendChild(message)
-messages.appendChild(container)
-
-typingMsg=message
-animateDots()
-
-messages.scrollTop=messages.scrollHeight
-}
-
-function removeTyping(){
-if(!typingMsg) return
-typingMsg.parentElement.remove()
-typingMsg=null
-}
-
-function animateDots(){
-let dots=1
-const interval=setInterval(()=>{
-if(!typingMsg){
-clearInterval(interval)
-return
-}
-typingMsg.textContent=".".repeat(dots)
-dots = dots%3 +1
-},400)
-}
-
-/* メニュー */
-
-function showMenu(el,text,id,isMine){
-
-if(currentMenu) currentMenu.remove()
-
-const menu=document.createElement("div")
-menu.classList.add("msgMenu")
-
-menu.onclick=(e)=>e.stopPropagation()
-
-/* コピー */
-const copy=document.createElement("div")
-copy.textContent="コピー"
-copy.onclick=()=>{
-navigator.clipboard.writeText(text)
-menu.remove()
-}
-menu.appendChild(copy)
-
-/* 編集 */
-if(isMine){
-const edit=document.createElement("div")
-edit.textContent="編集"
-edit.onclick=()=>{
-startEdit(id,text)
-menu.remove()
-}
-menu.appendChild(edit)
-}
-
-/* 削除 */
-if(isMine){
-const del=document.createElement("div")
-del.textContent="削除"
-del.onclick=()=>{
-socket.emit("deleteMessage",id)
-menu.remove()
-}
-menu.appendChild(del)
-}
-
-el.appendChild(menu)
-currentMenu=menu
-}
-
-/* 編集開始 */
-
-function startEdit(id,text){
-editingId=id
-
-const input=document.getElementById("messageInput")
-input.value=text
-document.getElementById("sendButton").textContent="編集"
-input.focus()
-}
-
-/* 外クリック */
-
-document.addEventListener("click",()=>{
-if(currentMenu){
-currentMenu.remove()
-currentMenu=null
-}
-})
-
-</script>
+    const socket=io()
+    
+    let currentMenu=null
+    let typingMsg=null
+    let typingTimer=null
+    let roomName=""
+    let editingId=null
+    
+    /* 入室 */
+    
+    function joinRoom(){
+    const name=document.getElementById("name").value
+    roomName=document.getElementById("room").value
+    
+    if(!name||!roomName)return
+    
+    socket.emit("joinRoom",{roomName,userName:name})
+    
+    document.getElementById("roomTitle").textContent=roomName
+    document.getElementById("chat").classList.add("open")
+    }
+    
+    /* 退出 */
+    
+    function leaveRoom(){
+    socket.disconnect()
+    location.reload()
+    }
+    
+    /* 送信 */
+    
+    function sendMessage(){
+    
+    const input=document.getElementById("messageInput")
+    const text=input.value
+    
+    if(text==="") return
+    
+    // ★ 編集モード
+    if(editingId){
+        socket.emit("editMessage",{id:editingId,text})
+    
+        editingId=null
+        input.placeholder="メッセージ"
+        document.getElementById("sendButton").textContent="送信"
+    }else{
+        socket.emit("chatMessage",text)
+    }
+    
+    input.value=""
+    
+    socket.emit("stopTyping")
+    removeTyping()
+    }
+    
+    /* Enter送信 */
+    
+    document.getElementById("messageInput").addEventListener("keydown",(e)=>{
+    if(e.key==="Enter") sendMessage()
+    })
+    
+    /* typing送信 */
+    
+    document.getElementById("messageInput").addEventListener("input",()=>{
+    
+    // ★ 編集中はtyping無効
+    if(editingId) return
+    
+    socket.emit("typing")
+    
+    clearTimeout(typingTimer)
+    
+    typingTimer=setTimeout(()=>{
+    socket.emit("stopTyping")
+    },1500)
+    
+    showTyping(true)
+    })
+    
+    /* ユーザー一覧 */
+    
+    socket.on("userList",(list)=>{
+    document.getElementById("userList").textContent="参加者: "+list.join(", ")
+    })
+    
+    /* メッセージ受信 */
+    
+    socket.on("chatMessage",(data)=>{
+    removeTyping()
+    
+    const messages=document.getElementById("messages")
+    
+    const container=document.createElement("div")
+    container.classList.add("msgContainer")
+    
+    const header=document.createElement("div")
+    header.classList.add("msgHeader")
+    
+    const message=document.createElement("div")
+    message.classList.add("message")
+    
+    header.textContent=data.user+" "+data.time
+    message.textContent=data.text
+    message.dataset.id=data.id
+    
+    const myName=document.getElementById("name").value
+    
+    if(data.user===myName){
+    container.classList.add("mine")
+    }else{
+    container.classList.add("other")
+    }
+    
+    message.onclick=(e)=>{
+    e.stopPropagation()
+    showMenu(message,data.text,data.id,data.user===myName)
+    }
+    
+    container.appendChild(header)
+    container.appendChild(message)
+    
+    messages.appendChild(container)
+    messages.scrollTop=messages.scrollHeight
+    })
+    
+    /* 削除 */
+    
+    socket.on("messageDeleted",(data)=>{
+    const msg=document.querySelector('[data-id="'+data.id+'"]')
+    if(msg) msg.closest(".msgContainer").remove()
+    })
+    
+    /* 編集反映 */
+    
+    socket.on("messageEdited",(data)=>{
+    
+    const msg=document.querySelector('[data-id="'+data.id+'"]')
+    if(!msg) return
+    
+    msg.textContent=data.text
+    
+    const header = msg.parentElement.querySelector(".msgHeader")
+    
+    if(!header.textContent.includes("(編集済み)")){
+        header.textContent += " (編集済み)"
+    }
+    
+    })
+    
+    /* typing */
+    
+    socket.on("typing",()=> showTyping(false))
+    socket.on("stopTyping",()=> removeTyping())
+    
+    function showTyping(isMine=false){
+    
+    if(typingMsg) return
+    
+    const messages=document.getElementById("messages")
+    
+    const container=document.createElement("div")
+    container.classList.add("msgContainer", isMine?"mine":"other")
+    
+    const message=document.createElement("div")
+    message.classList.add("message")
+    
+    container.appendChild(message)
+    messages.appendChild(container)
+    
+    typingMsg=message
+    animateDots()
+    
+    messages.scrollTop=messages.scrollHeight
+    }
+    
+    function removeTyping(){
+    if(!typingMsg) return
+    typingMsg.parentElement.remove()
+    typingMsg=null
+    }
+    
+    function animateDots(){
+    let dots=1
+    const interval=setInterval(()=>{
+    if(!typingMsg){
+    clearInterval(interval)
+    return
+    }
+    typingMsg.textContent=".".repeat(dots)
+    dots = dots%3 +1
+    },400)
+    }
+    
+    /* ===== メニュー ===== */
+    
+    function showMenu(el,text,id,isMine){
+    
+    if(currentMenu) currentMenu.remove()
+    
+    const menu=document.createElement("div")
+    menu.classList.add("msgMenu")
+    
+    menu.onclick=(e)=>e.stopPropagation()
+    
+    /* コピー */
+    const copy=document.createElement("div")
+    copy.textContent="コピー"
+    copy.onclick=()=>{
+    navigator.clipboard.writeText(text)
+    menu.remove()
+    }
+    menu.appendChild(copy)
+    
+    /* 編集 */
+    if(isMine){
+    const edit=document.createElement("div")
+    edit.textContent="編集"
+    
+    edit.onclick=()=>{
+    startEdit(id,text)
+    menu.remove()
+    }
+    menu.appendChild(edit)
+    }
+    
+    /* 削除 */
+    if(isMine){
+    const del=document.createElement("div")
+    del.textContent="削除"
+    
+    del.onclick=()=>{
+    socket.emit("deleteMessage",id)
+    menu.remove()
+    }
+    menu.appendChild(del)
+    }
+    
+    el.appendChild(menu)
+    currentMenu=menu
+    }
+    
+    /* ===== 編集開始 ===== */
+    
+    function startEdit(id,text){
+    
+    const input=document.getElementById("messageInput")
+    
+    input.value=text
+    input.placeholder="編集後のメッセージ"
+    document.getElementById("sendButton").textContent="編集"
+    
+    editingId=id
+    
+    // ★ typing消す
+    removeTyping()
+    socket.emit("stopTyping")
+    
+    }
+    
+    /* 外クリックで閉じる */
+    
+    document.addEventListener("click",()=>{
+    if(currentMenu){
+    currentMenu.remove()
+    currentMenu=null
+    }
+    })
+    
+    </script>
 
 </body>
 </html>
